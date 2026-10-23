@@ -31,3 +31,4 @@
 *.unitypackage.meta
 .DS_Store
 Thumbs.db
+/BACKUP/
