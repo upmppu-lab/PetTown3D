@@ -1,0 +1,32 @@
+zoo rotation 0 slot 0:True
+zoo rotation 0 slot 1:True
+zoo rotation 0 slot 2:True
+zoo rotation 0 slot 3:True
+habitat 0 floor excluded rotation 0:True
+habitat 1 floor excluded rotation 0:True
+habitat 2 floor excluded rotation 0:True
+habitat 3 floor excluded rotation 0:True
+zoo rotation 90 slot 0:True
+zoo rotation 90 slot 1:True
+zoo rotation 90 slot 2:True
+zoo rotation 90 slot 3:True
+habitat 0 floor excluded rotation 90:True
+habitat 1 floor excluded rotation 90:True
+habitat 2 floor excluded rotation 90:True
+habitat 3 floor excluded rotation 90:True
+zoo rotation 180 slot 0:True
+zoo rotation 180 slot 1:True
+zoo rotation 180 slot 2:True
+zoo rotation 180 slot 3:True
+habitat 0 floor excluded rotation 180:True
+habitat 1 floor excluded rotation 180:True
+habitat 2 floor excluded rotation 180:True
+habitat 3 floor excluded rotation 180:True
+zoo rotation 270 slot 0:True
+zoo rotation 270 slot 1:True
+zoo rotation 270 slot 2:True
+zoo rotation 270 slot 3:True
+habitat 0 floor excluded rotation 270:True
+habitat 1 floor excluded rotation 270:True
+habitat 2 floor excluded rotation 270:True
+habitat 3 floor excluded rotation 270:True

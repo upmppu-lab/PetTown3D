@@ -56,8 +56,8 @@ public class PetTownPlayerControls : MonoBehaviour
             joystickFinger = -1;
         }
         else UpdateJoystickInput();
-        if (PetTownCustomizationUI.IsWindowOpen) hasDestination = false;
-        else if (allowClickToMove) UpdateDestinationInput();
+        if (PetTownCustomizationUI.IsWindowOpen || (PetTownGame.Instance != null && PetTownGame.Instance.IsRoadConstructionActive)) hasDestination = false;
+        else if (allowClickToMove && !(PetTownGame.Instance != null && PetTownGame.Instance.IsRoadConstructionActive)) UpdateDestinationInput();
 
         float x = PetTownCustomizationUI.IsWindowOpen ? 0f : Input.GetAxisRaw("Horizontal");
         float y = PetTownCustomizationUI.IsWindowOpen ? 0f : Input.GetAxisRaw("Vertical");
@@ -143,6 +143,9 @@ public class PetTownPlayerControls : MonoBehaviour
             if (c.gameObject.layer == 30) continue; // dedicated preview layer
             // The procedural river is handled by IsWater, not as a solid wall.
             if (c.name.Contains("River") || c.name.Contains("Water") || c.name.Contains("Lake")) continue;
+            // Zero-distance hits from existing overlaps are not a new collision.
+            // The terrain is handled separately by TryGround, not as a wall.
+            if (hit.distance <= .0001f) continue;
             if (hit.distance <= distance + .001f) return false;
         }
         return true;
@@ -150,10 +153,18 @@ public class PetTownPlayerControls : MonoBehaviour
 
     bool TryGround(Vector3 point, out Vector3 result)
     {
-        // Raycast ONLY against the actual terrain mesh, not rivers, props, or UI.
+        result = point;
+        // Prefer PetTownGame's own ground-height logic: it already knows about building
+        // floors (which sit higher than the outdoor terrain underneath them), so walking
+        // into a shop steps the character up onto the floor instead of sinking through it.
+        if (PetTownGame.Instance != null)
+        {
+            result.y = PetTownGame.Instance.GetGroundHeight(point.x, point.z) + groundOffset;
+            return true;
+        }
+        // Fallback: raycast ONLY against the actual terrain mesh, not rivers, props, or UI.
         // The master character can start on a bridge/platform, so do not block
         // movement if terrain is temporarily unavailable.
-        result = point;
         GameObject terrain = GameObject.Find("EDITABLE_Terrain_Mesh");
         if (terrain != null)
         {
@@ -192,7 +203,8 @@ public class PetTownPlayerControls : MonoBehaviour
             Vector2 p = Input.mousePosition;
             if (Vector2.Distance(p, joystickCenter) < joystickRadius * 1.6f) return;
             if (PetTownCustomizationUI.IsScreenPointOverUI(p)) return;
-            if (p.y < 100f || p.x > Screen.width - 55f) return; // Existing HUD controls.
+            // HUD hit testing above already excludes real controls. Do not block the whole north edge.
+            if (p.y < 8f || p.x > Screen.width - 8f) return;
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
             SetDestinationFromScreen(p);
         }
@@ -292,7 +304,7 @@ public class PetTownPlayerControls : MonoBehaviour
     {
         // Draw above the existing mobile HUD, which otherwise covers the joystick.
         GUI.depth = -1000;
-        if (PetTownCustomizationUI.IsWindowOpen) return;
+        if (PetTownCustomizationUI.IsWindowOpen || (PetTownGame.Instance != null && PetTownGame.Instance.IsPresentationMenuOpen)) return;
         if (joystickBase == null || joystickKnob == null) return;
         Vector2 center = new Vector2(joystickCenter.x, Screen.height - joystickCenter.y);
         float r = joystickRadius;

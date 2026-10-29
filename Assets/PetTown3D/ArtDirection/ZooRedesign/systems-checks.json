@@ -1,0 +1,13 @@
+{
+  "legacy_three_species_preserved": true,
+  "six_species_purchase_and_prices": true,
+  "all_species_capacity_enforced": true,
+  "invalid_species_rejected": true,
+  "daily_care_decay": true,
+  "feeding_uses_all_six_species": true,
+  "cleaning_works": true,
+  "zoo_visitor_reward": true,
+  "six_species_json_roundtrip": true,
+  "all_six_models_linked": true,
+  "runtime_grass_meshes_readable": true
+}

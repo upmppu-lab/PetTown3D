@@ -1,0 +1,10 @@
+{
+  "portrait": true,
+  "patientRows": 5,
+  "actualUIAdmitsWithoutEarlySupplyUse": true,
+  "actualUIEnablesAutoTreatment": true,
+  "unintendedTextOverflow": 0,
+  "buttonsBelow44": 0,
+  "overflowNames": [],
+  "saveUnchanged": true
+}

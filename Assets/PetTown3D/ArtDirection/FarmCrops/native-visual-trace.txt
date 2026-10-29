@@ -1,0 +1,16 @@
+rotation_0_양배추 height 0.1539917 -> 0.5500183
+rotation_0_토마토 height 0.2940064 -> 1.049988
+rotation_0_당근 height 0.1820068 -> 0.6499939
+rotation_0_옥수수 height 0.4339905 -> 1.549988
+rotation_0_밀 height 0.3135681 -> 1.119934
+rotation_0_호박 height 0.1539917 -> 0.5500183
+rotation_0_감자 height 0.1820068 -> 0.6499939
+rotation_0_draws 387 -> 75
+rotation_90_양배추 height 0.1539917 -> 0.5500183
+rotation_90_토마토 height 0.2940064 -> 1.049988
+rotation_90_당근 height 0.1820068 -> 0.6499939
+rotation_90_옥수수 height 0.4339905 -> 1.549988
+rotation_90_밀 height 0.3135681 -> 1.119934
+rotation_90_호박 height 0.1539917 -> 0.5500183
+rotation_90_감자 height 0.1820068 -> 0.6499939
+rotation_90_draws 387 -> 75

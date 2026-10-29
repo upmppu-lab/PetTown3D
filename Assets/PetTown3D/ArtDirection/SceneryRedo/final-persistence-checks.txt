@@ -1,0 +1,7 @@
+six animals retained:True
+three species adult and young:True
+animal ID growth care output retained:True
+supplies retained:True
+actual slot unchanged since fixture restore:True
+actual user has no QA ranch:True
+imported scaled controllers safe:True

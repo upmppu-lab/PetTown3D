@@ -1,0 +1,2133 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.AI;
+using Unity.AI.Navigation;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+// Pet Town 3D - standalone prototype. Every visual is a replaceable GameObject.
+// No third-party assets or packages are required.
+public class PetTownGame : MonoBehaviour
+{
+    enum Mode { Start, Play, Build, Furniture, Customize }
+    Mode mode = Mode.Start;
+    readonly List<GameObject> buildings = new List<GameObject>();
+    readonly List<GameObject> props = new List<GameObject>();
+    readonly List<GameObject> fog = new List<GameObject>();
+    readonly List<GameObject> villagers = new List<GameObject>();
+    class VillagerAnim { public Animation anim; public Animator animator; public string idleClip; public string walkClip; public string runClip; public Transform model; }
+    readonly Dictionary<GameObject, VillagerAnim> villagerAnimInfo = new Dictionary<GameObject, VillagerAnim>();
+    class BuildingFloor { public Vector3 center; public float halfW, halfD, floorY; }
+    readonly List<BuildingFloor> buildingFloors = new List<BuildingFloor>();
+    enum VillagerGoal { Stroll, GoToShop, AtShop }
+    class VillagerWander { public Vector3 target; public float nextPick; public bool running; public VillagerGoal goal; public float stuckSince=-1f; }
+    readonly Dictionary<GameObject, VillagerWander> villagerWander = new Dictionary<GameObject, VillagerWander>();
+    // Villager pathfinding runs on a runtime-baked NavMesh instead of hand-rolled capsule
+    // avoidance — that approach kept failing in new ways (corner clipping, sideways jitter,
+    // getting stuck) because it was re-deriving what Unity's own navigation system already
+    // solves properly. Rebaked whenever the world geometry changes (new building placed/loaded).
+    NavMeshSurface navSurface;
+    void RebakeNavMesh()
+    {
+        if (navSurface == null)
+        {
+            navSurface = gameObject.GetComponent<NavMeshSurface>();
+            if (navSurface == null) navSurface = gameObject.AddComponent<NavMeshSurface>();
+            navSurface.collectObjects = CollectObjects.All;
+            navSurface.layerMask = ~0; // include everything (terrain, walls, floors)
+            navSurface.overrideVoxelSize = true;
+            navSurface.voxelSize = 0.17f;
+        }
+        navSurface.BuildNavMesh();
+    }
+    // Imported Meshy/asset-store meshes (trees, furniture, the player, villagers) are often
+    // marked "not readable" for runtime, which makes NavMesh baking throw a read-access error
+    // for every one of them whenever it runs while they're in the scene. None of them need to
+    // contribute static navmesh geometry anyway (the player/villagers move and are their own
+    // NavMeshAgents; trees/furniture are just decoration here), so just tell the bake to skip
+    // their render meshes entirely instead of fighting mesh import settings.
+    void MarkNavMeshIgnore(GameObject go)
+    {
+        if (go == null) return;
+        var mod = go.GetComponent<NavMeshModifier>();
+        if (mod == null) mod = go.AddComponent<NavMeshModifier>();
+        mod.ignoreFromBuild = true;
+        mod.applyToChildren = true;
+    }
+    // If an imported villager visibly faces away from its walk direction, flip this to 180.
+    const float VillagerFacingOffsetY = 0f;
+    // Unused Unity layer index — the terrain mesh goes here so the villager wall-avoidance
+    // raycast (which must ignore gentle hills, only real walls/furniture) can exclude it.
+    const int TerrainLayer = 9;
+    GameObject hero, cameraPivot, shop, roof, ghost;
+    Transform heroLeftArm, heroRightArm, heroLeftLeg, heroRightLeg;
+    float walkPhase;
+    Animator meshyAnimator;
+    bool usingMeshyPlayer;
+    bool meshyWasMoving;
+    Animation[] meshyLegacyAnimations;
+    bool meshyLegacyPresent;
+    Camera cam;
+    Material grass, road, water, dark, wood, wall, roofMat, skin, shirt, hairMat;
+    Material foliageLight, foliageDark, trim, windowMat, gold, blush;
+    // EasyRoads3D Free is already in the project (Assets/EasyRoads3D) — its own dirt-road
+    // material/texture is reused for the road ribbon instead of a flat gray color, which is
+    // the practical way to use that asset here: EasyRoads3D's own road-building workflow is a
+    // hand-authored Scene-view tool (place markers, build splines in the Editor), which doesn't
+    // fit this project's fully procedural, no-manual-scene-authoring approach. Its material
+    // already lives under an "EasyRoads3D/Resources" folder, so it's loadable by name directly.
+    Material dirtRoadMat;
+    static readonly string[] MedievalHouseResources = { "MedievalHouses/SmallMedievalHouse", "MedievalHouses/MedievalHouse", "MedievalHouses/TwoStoryMedievalHouse", "MedievalHouses/TwoStoryMedievalHouse_2" };
+    static readonly string[] RockResources = { "Rocks/SmallRock", "Rocks/MossyBoulder", "Rocks/RockCluster" };
+    const string FenceResource = "FenceKit/WoodenFence", GateResource = "FenceKit/WoodenGate";
+    int money = 2500, population = 0, sold = 0, inventory = 4;
+    int reputation=0, shopLevel=1, day=1, completedOrders=0, missedOrders=0;
+    int dogStock=2, catStock=2, rabbitStock=0;
+    float dayTimer=0f, orderTimer=0f, orderDeadline=0f;
+    int orderPet=-1;
+    GameObject waitingCustomer;
+    readonly string[] petNames={"Puppy", "Kitten", "Bunny"};
+    int selected = 0, hairStyle = 0, faceStyle = 0, bodyStyle = 0, legStyle = 0, accessory = 0;
+    int furnitureChoice = 0;
+    float worldClock, customerClock, noticeTime, zoom = 39f;
+    float cameraYaw = 42f, cameraPitch = 48f;
+    Vector3 cameraFocus = Vector3.zero;
+    // True while the player has panned the camera away with middle-mouse drag to look at the
+    // rest of the map. Stays true after the button is released (so the view doesn't immediately
+    // snap back to the character) and only clears once the character actually moves again.
+    bool cameraFreeLook = false;
+    Vector3 freeLookStartCharPos;
+    string notice = "Choose a location for your first Pet Shop";
+    bool showRoofs = false;
+    Vector3 shopPosition;
+    const int WorldSize = 220;
+    readonly string[] types = { "Pet Shop", "Home", "Resident House", "Pet Cafe", "Pet Hospital", "Park", "Lake", "Zoo", "Road" };
+    readonly int[] costs = { 0, 600, 250, 1500, 1800, 450, 700, 2400, 20 };
+    readonly string[] furniture = { "Counter", "Pet Bed", "Display", "Chair", "Table", "Plant" };
+    GUIStyle titleStyle, textStyle, buttonStyle;
+
+    // Lets other scripts (the player controller, which computes its own ground height
+    // independently) ask this single source of truth for standing height — including the
+    // raised-floor-inside-a-building case handled by Ground()/buildingFloors below.
+    public static PetTownGame Instance;
+    public float GetGroundHeight(float x,float z) => Ground(x,z);
+    void Start()
+    {
+        Instance=this;
+        Application.targetFrameRate = 60;
+        // 사용자 요청: 텍스처 잔디(Ground9) 대신 단순 단색 녹색 바닥으로 복귀.
+        grass = Mat(new Color(.39f,.67f,.37f));
+        road=Mat(new Color(.55f,.52f,.48f));
+        water=Mat(new Color(.18f,.58f,.78f)); dark=Mat(new Color(.22f,.19f,.29f));
+        wood=LoadMat("Materials/Adler Light Wood", new Color(.68f,.44f,.26f));
+        // Int_Apt_01 등 "Interior Exterior" 카테고리 머티리얼은 트림시트(아틀라스) 텍스처라
+        // 전용 모델이 아닌 일반 큐브에 입히면 검은 여백/경계가 그대로 보여서 깨져 보임.
+        // WhiteDull은 텍스처 없는 단색 서피스라 큐브에 입혀도 안전함. 메탈릭만 낮춰서 페인트 느낌으로.
+        wall=LoadMat("Materials/WhiteDull", new Color(.97f,.87f,.73f));
+        if(wall.HasProperty("_Metallic"))wall.SetFloat("_Metallic",0.03f);
+        if(wall.HasProperty("_Glossiness"))wall.SetFloat("_Glossiness",0.32f);
+        wall.color=new Color(.97f,.93f,.85f);
+        roofMat=Mat(new Color(.82f,.35f,.39f)); skin=Mat(new Color(1f,.79f,.65f));
+        shirt=Mat(new Color(.42f,.66f,.92f)); hairMat=Mat(new Color(.35f,.23f,.16f));
+        foliageLight=Mat(new Color(.60f,.79f,.42f));foliageDark=Mat(new Color(.24f,.50f,.33f));
+        trim=LoadMat("Materials/Brushed Metal_Gold", new Color(.98f,.94f,.82f));
+        windowMat=LoadMat("Materials/Glass_Dark", new Color(.45f,.76f,.87f));
+        gold=Mat(new Color(.97f,.76f,.34f));blush=Mat(new Color(.97f,.55f,.54f));
+        dirtRoadMat=LoadMat("Materials/roads/dirt material", new Color(.56f,.45f,.33f));
+        BuildWorld();
+        SetupCamera();
+        LoadGame();
+        PlaceMasterOnSafeGround();
+        if (FindFirstObjectByType<PetTownPlayerControls>() != null && hero != null)
+            foreach (var r in hero.GetComponentsInChildren<Renderer>()) r.enabled = false;
+        if (shop == null) { mode=Mode.Start; Message("Choose a flat area and click to place your Pet Shop"); }
+        else mode=Mode.Play;
+    }
+
+    // Place the controllable character on dry ground near the saved shop.
+    // Runs after LoadGame so the shop location is known; does not change the shop.
+    void PlaceMasterOnSafeGround()
+    {
+        var player = FindFirstObjectByType<PetTownPlayerControls>();
+        if (player == null || shop == null) return;
+        Vector3 center = shopPosition;
+        Vector3 chosen = player.transform.position;
+        bool found = false;
+        for (int ring = 0; ring <= 12 && !found; ring++)
+        {
+            float radius = 12f + ring * 2f;
+            for (int i = 0; i < 24; i++)
+            {
+                float a = i * Mathf.PI * 2f / 24f;
+                float x = center.x + Mathf.Cos(a) * radius;
+                float z = center.z + Mathf.Sin(a) * radius;
+                if (IsWater(x,z) || PetTownWorldSafety.IsWater(x,z,1.2f)) continue;
+                Vector3 candidate = new Vector3(x, Ground(x,z), z);
+                // Avoid starting inside the shop or other physical obstacles.
+                Collider[] nearby = Physics.OverlapCapsule(candidate + Vector3.up * .4f,
+                    candidate + Vector3.up * 1.5f, .4f);
+                bool blocked = false;
+                foreach (var c in nearby)
+                {
+                    if (c.isTrigger || c.transform.IsChildOf(player.transform)) continue;
+                    if (c.name == "EDITABLE_Terrain_Mesh" || c.name.Contains("Terrain")) continue;
+                    blocked = true; break;
+                }
+                if (blocked) continue;
+                chosen = candidate; found = true; break;
+            }
+        }
+        if (found) player.transform.position = chosen;
+        else Debug.LogWarning("PetTown: no verified safe spawn near the shop; existing position preserved.");
+    }
+
+    Material Mat(Color c) { var m = new Material(Shader.Find("Standard")); m.color=c; return m; }
+    // 리소스 폴더(Assets/PetTown3D/Resources/Materials)에서 실제 텍스처가 입혀진 머티리얼을 불러온다.
+    // 못 찾으면 예전처럼 단색으로 대체(Fallback)해서 절대 에러로 멈추지 않는다.
+    Material LoadMat(string resourcePath, Color fallback)
+    {
+        var m = Resources.Load<Material>(resourcePath);
+        return m != null ? new Material(m) : Mat(fallback);
+    }
+    // 큐브는 크기를 늘려도 UV가 0~1로 고정이라 텍스처가 쭉 늘어나 보인다.
+    // 벽/바닥 크기(미터)에 맞춰 타일 반복 수를 다시 계산해서 늘어짐을 없앤다.
+    Material Tiled(Material src, float sizeU, float sizeV, float tileMeters = 2f)
+    {
+        var m = new Material(src);
+        Vector2 s = new Vector2(Mathf.Max(0.5f, sizeU / tileMeters), Mathf.Max(0.5f, sizeV / tileMeters));
+        if (m.HasProperty("_MainTex")) m.SetTextureScale("_MainTex", s);
+        if (m.HasProperty("_BumpMap")) m.SetTextureScale("_BumpMap", s);
+        if (m.HasProperty("_MetallicGlossMap")) m.SetTextureScale("_MetallicGlossMap", s);
+        if (m.HasProperty("_OcclusionMap")) m.SetTextureScale("_OcclusionMap", s);
+        return m;
+    }
+    // 바닥/몰딩/지붕처럼 순전히 장식용인 조각은 콜라이더를 떼서 캐릭터가 걸리지 않게 한다.
+    // (Part()가 만드는 Primitive는 기본으로 Collider가 붙는데, 그걸 그대로 두면 PetTownPlayerControls의
+    // CapsuleCast 충돌 체크가 "턱"으로 인식해서 캐릭터가 가게 안으로 못 들어감.)
+    GameObject Deco(PrimitiveType primitive, string name, Vector3 p, Vector3 scale, Material m, Transform parent=null)
+    {
+        GameObject o=Part(primitive,name,p,scale,m,parent);
+        Collider col=o.GetComponent<Collider>(); if(col!=null)Destroy(col);
+        return o;
+    }
+    // 건물을 놓은 자리 주변 지형을 건물 바닥 높이에 맞춰 평평하게 다듬는다.
+    // 안 하면 울퉁불퉁한 언덕 위에 평평한 건물이 얹혀서 한쪽은 땅에 파묻히고 한쪽은 붕 뜬 것처럼 보임.
+    void FlattenTerrain(Vector3 center, float halfW, float halfD, float targetY)
+    {
+        GameObject terrainObj=GameObject.Find("EDITABLE_Terrain_Mesh");
+        if(terrainObj==null)return;
+        MeshFilter mf=terrainObj.GetComponent<MeshFilter>();
+        if(mf==null||mf.sharedMesh==null)return;
+        Mesh mesh=mf.sharedMesh;
+        Vector3[] verts=mesh.vertices;
+        const float margin=2.2f; // 건물 밖으로 부드럽게 원래 지형과 섞이는 구간(미터)
+        bool changed=false;
+        for(int i=0;i<verts.Length;i++)
+        {
+            float dx=Mathf.Abs(verts[i].x-center.x), dz=Mathf.Abs(verts[i].z-center.z);
+            if(dx>halfW+margin||dz>halfD+margin)continue;
+            float outside=Mathf.Max(dx-halfW,dz-halfD,0f);
+            float t=Mathf.Clamp01(outside/margin);
+            float blend=1f-Mathf.SmoothStep(0f,1f,t); // 1=완전 평탄화(건물 발밑), 0=원래 지형 그대로
+            verts[i].y=Mathf.Lerp(verts[i].y,targetY,blend);
+            changed=true;
+        }
+        if(!changed)return;
+        mesh.vertices=verts; mesh.RecalculateNormals(); mesh.RecalculateBounds();
+        MeshCollider mc=terrainObj.GetComponent<MeshCollider>();
+        if(mc!=null){mc.sharedMesh=null;mc.sharedMesh=mesh;}
+    }
+    // Unity renders an object with a null material as solid magenta (its "missing material"
+    // placeholder). That can happen transiently if a script hot-reload during Play mode clears
+    // a material field before Start() reruns — this safety net substitutes a plain neutral grey
+    // instead of ever showing the glaring magenta/pink error color in-game.
+    Material safeFallbackMat;
+    Material SafeFallbackMat() { if(safeFallbackMat==null) safeFallbackMat=Mat(new Color(.6f,.6f,.6f)); return safeFallbackMat; }
+    GameObject Part(PrimitiveType primitive, string name, Vector3 p, Vector3 scale, Material m, Transform parent=null)
+    {
+        GameObject o=GameObject.CreatePrimitive(primitive); o.name=name; o.transform.position=p;
+        o.transform.localScale=scale; if(parent!=null) o.transform.SetParent(parent,true);
+        o.GetComponent<Renderer>().sharedMaterial = m!=null ? m : SafeFallbackMat(); return o;
+    }
+    float Height(float x,float z)
+    {
+        float h = Mathf.PerlinNoise(x*.018f+4,z*.018f+7)*7.5f-3.0f;
+        h += Mathf.PerlinNoise(x*.052f+2,z*.052f+6)*1.1f;
+        return h;
+    }
+    bool IsWater(float x,float z)
+    {
+        float river = Mathf.Sin(z*.031f)*12f+Mathf.Sin(z*.09f)*3f;
+        return Mathf.Abs(x-river)<3.5f || (x>52 && x<72 && z>35 && z<66);
+    }
+    float Ground(float x,float z)
+    {
+        for(int i=0;i<buildingFloors.Count;i++)
+        {
+            var b=buildingFloors[i];
+            if(Mathf.Abs(x-b.center.x)<=b.halfW && Mathf.Abs(z-b.center.z)<=b.halfD) return b.floorY;
+        }
+        return IsWater(x,z) ? -.5f : Height(x,z);
+    }
+    void BuildWorld()
+    {
+        int n=110; float step=2f;
+        Vector3[] vertices=new Vector3[(n+1)*(n+1)]; Vector2[] uv=new Vector2[vertices.Length];
+        int[] triangles=new int[n*n*6];
+        for(int z=0;z<=n;z++) for(int x=0;x<=n;x++)
+        {
+            int i=z*(n+1)+x; float px=x*step-110,pz=z*step-110;
+            vertices[i]=new Vector3(px,Ground(px,pz),pz); uv[i]=new Vector2(x*.15f,z*.15f);
+        }
+        int t=0; for(int z=0;z<n;z++) for(int x=0;x<n;x++)
+        {
+            int i=z*(n+1)+x;
+            triangles[t++]=i;triangles[t++]=i+n+1;triangles[t++]=i+1;
+            triangles[t++]=i+1;triangles[t++]=i+n+1;triangles[t++]=i+n+2;
+        }
+        Mesh mesh=new Mesh(); mesh.indexFormat=UnityEngine.Rendering.IndexFormat.UInt32;
+        mesh.vertices=vertices;mesh.uv=uv;mesh.triangles=triangles;mesh.RecalculateNormals();
+        GameObject terrain=new GameObject("EDITABLE_Terrain_Mesh");
+        terrain.AddComponent<MeshFilter>().sharedMesh=mesh;
+        terrain.AddComponent<MeshRenderer>().sharedMaterial=grass;
+        terrain.AddComponent<MeshCollider>().sharedMesh=mesh;
+        terrain.layer=TerrainLayer; // villagers' wall-avoidance raycast ignores this layer
+        // Water overlay; river is visible as a continuous ribbon following its winding path.
+        var riverParent=new GameObject("River_And_Streams");
+        for(int z=-106;z<106;z+=3)
+        {
+            float x=Mathf.Sin(z*.031f)*12f+Mathf.Sin(z*.09f)*3f;
+            Part(PrimitiveType.Cube,"River",new Vector3(x,-.24f,z),new Vector3(7.2f,.18f,3.5f),water,riverParent.transform);
+        }
+        Part(PrimitiveType.Cylinder,"Lake_Water",new Vector3(62,-.3f,50),new Vector3(21,.12f,24),water);
+        // Trees and grass clusters: a handful of denser "groves" (natural-looking clumps of
+        // trees instead of every tree being evenly spaced) plus a wider, sparser scatter of
+        // individual trees and grass across the rest of the map.
+        var random=new System.Random(41);
+        bool FoliageClear(float fx,float fz) => !IsWater(fx,fz) && !(fx>58 && fz>55) && !(Mathf.Abs(fx)<15 && Mathf.Abs(fz)<15);
+        var groveCenters=new List<Vector3>();
+        for(int g=0;g<7;g++)
+        {
+            float gx=(float)random.NextDouble()*176-88, gz=(float)random.NextDouble()*176-88;
+            if(FoliageClear(gx,gz)) groveCenters.Add(new Vector3(gx,0,gz));
+        }
+        foreach(var gc in groveCenters)
+        {
+            int clusterCount=random.Next(4,8);
+            for(int k=0;k<clusterCount;k++)
+            {
+                float x=gc.x+(float)(random.NextDouble()*9-4.5), z=gc.z+(float)(random.NextDouble()*9-4.5);
+                if(FoliageClear(x,z)) MakeTree(new Vector3(x,Ground(x,z),z));
+            }
+        }
+        for(int i=0;i<170;i++)
+        {
+            float x=(float)random.NextDouble()*204-102,z=(float)random.NextDouble()*204-102;
+            if(!FoliageClear(x,z)) continue;
+            if(i%6==0) MakeTree(new Vector3(x,Ground(x,z),z));
+            else if(i%19==0)
+            {
+                MakeRock(new Vector3(x,Ground(x,z),z));
+            }
+            else
+            {
+                // Vary size and tint so grass clumps read as a mix of scrub/bushes instead of
+                // one repeated shape, and leave them collider-free (Deco, not Part) so they
+                // don't act as tiny invisible walls underfoot.
+                float gs=UnityEngine.Random.Range(.16f,.32f);
+                Material gm = (i%3==0)?foliageDark:(i%3==1)?foliageLight:grass;
+                Deco(PrimitiveType.Capsule,"Grass_Clump",new Vector3(x,Ground(x,z)+gs*.9f,z),new Vector3(gs,gs*1.8f,gs),gm);
+            }
+        }
+        // The far-side rival village is present from the beginning.
+        Vector3 rivalHouseA=new Vector3(76,Ground(76,-76),-76);
+        Vector3 rivalHouseB=new Vector3(88,Ground(88,-70),-70);
+        Vector3 rivalShop=new Vector3(80,Ground(80,-84),-84);
+        CreateBuilding(2,rivalHouseA,true);
+        CreateBuilding(2,rivalHouseB,true);
+        CreateBuilding(0,rivalShop,true);
+        BuildPathTo(rivalHouseA,rivalShop);
+        BuildPathTo(rivalHouseB,rivalShop);
+        for(int i=0;i<6;i++) Part(PrimitiveType.Cube,"Dark_Fog",new Vector3(75+i*5,8,-74),new Vector3(6,15,55),Mat(new Color(.31f,.29f,.4f,.20f)));
+        var sun=new GameObject("Sun"); var light=sun.AddComponent<Light>();light.type=LightType.Directional;light.intensity=1.2f;
+        sun.transform.rotation=Quaternion.Euler(45,-35,0);
+        RenderSettings.ambientLight=new Color(.72f,.75f,.79f);
+        RebakeNavMesh();
+    }
+    static readonly string[] TreeResource={"Trees/TreePine","Trees/TreeFruit"};
+    void MakeTree(Vector3 p)
+    {
+        var root=new GameObject("Replaceable_Tree");root.transform.position=p;
+        GameObject prefab=Resources.Load<GameObject>(TreeResource[UnityEngine.Random.Range(0,TreeResource.Length)]);
+        if(prefab!=null)
+        {
+            GameObject instance=Instantiate(prefab,root.transform);
+            instance.name="Model";
+            instance.transform.localPosition=Vector3.zero;
+            instance.transform.localRotation=Quaternion.Euler(0,UnityEngine.Random.Range(0f,360f),0);
+            MarkNavMeshIgnore(root);
+            var renderers=instance.GetComponentsInChildren<Renderer>();
+            if(renderers.Length>0)
+            {
+                Bounds b=renderers[0].bounds;
+                for(int i=1;i<renderers.Length;i++)b.Encapsulate(renderers[i].bounds);
+                float targetHeight=UnityEngine.Random.Range(3.6f,5.2f);
+                float scale=Mathf.Clamp(targetHeight/Mathf.Max(.001f,b.size.y),.01f,50f);
+                instance.transform.localScale=Vector3.one*scale;
+                renderers=instance.GetComponentsInChildren<Renderer>();
+                b=renderers[0].bounds;
+                for(int i=1;i<renderers.Length;i++)b.Encapsulate(renderers[i].bounds);
+                instance.transform.position+=Vector3.up*(p.y-b.min.y);
+            }
+            return;
+        }
+        // 에셋을 못 찾으면 예전 도형 나무로 안전하게 대체.
+        Part(PrimitiveType.Cylinder,"Trunk",p+Vector3.up*1.15f,new Vector3(.5f,1.15f,.5f),wood,root.transform);
+        Part(PrimitiveType.Sphere,"Crown_Lower",p+Vector3.up*2.45f,new Vector3(2.65f,2.1f,2.6f),foliageDark,root.transform);
+        Part(PrimitiveType.Sphere,"Crown_Top",p+Vector3.up*3.2f,new Vector3(2.05f,2.0f,2.05f),foliageLight,root.transform);
+    }
+    // Real rock models (Low Poly Medieval Starter Pack) instead of a plain dark sphere — much
+    // more recognizable as "a rock" at a glance. Falls back to the old primitive if the asset
+    // is ever missing. Uses a solid BoxCollider sized after the fit so it still blocks walking
+    // through it, without needing the imported mesh to be read/write-enabled for a MeshCollider.
+    void MakeRock(Vector3 p)
+    {
+        var root=new GameObject("Replaceable_Rock");root.transform.position=p;
+        GameObject prefab=Resources.Load<GameObject>(RockResources[UnityEngine.Random.Range(0,RockResources.Length)]);
+        if(prefab!=null)
+        {
+            GameObject instance=Instantiate(prefab,root.transform);
+            instance.name="Model";
+            instance.transform.localPosition=Vector3.zero;
+            instance.transform.localRotation=Quaternion.Euler(0,UnityEngine.Random.Range(0f,360f),0);
+            foreach(var c in instance.GetComponentsInChildren<Collider>()) Destroy(c);
+            MarkNavMeshIgnore(root);
+            float targetHeight=UnityEngine.Random.Range(.55f,1.1f);
+            StartCoroutine(FitPropWithColliderNextFrame(instance,root,p.y,targetHeight,.95f));
+            return;
+        }
+        float rs=UnityEngine.Random.Range(.35f,.7f);
+        Part(PrimitiveType.Sphere,"Rock",p+Vector3.up*rs*.3f,new Vector3(rs,rs*.68f,rs*.85f),dark,root.transform);
+    }
+    // Shared fit-and-solidify coroutine for any prefab instantiated at runtime that needs both
+    // the one-frame-delayed bounds fix (see FitModelNextFrame above) AND a real collider to
+    // block walking through it — used for rocks, medieval houses and the fence/gate kit. A
+    // plain BoxCollider sized from the measured bounds is used instead of a MeshCollider so it
+    // works even on imported meshes that aren't marked Read/Write-enabled.
+    IEnumerator FitPropWithColliderNextFrame(GameObject instance, GameObject root, float groundY, float targetHeight, float colliderInset)
+    {
+        yield return null;
+        if(instance==null||root==null) yield break;
+        var renderers=instance.GetComponentsInChildren<Renderer>();
+        if(renderers.Length==0) yield break;
+        Bounds b=renderers[0].bounds;
+        for(int r=1;r<renderers.Length;r++) b.Encapsulate(renderers[r].bounds);
+        if(b.size.y<=0.0001f) yield break;
+        float scale=Mathf.Clamp(targetHeight/b.size.y,.001f,2000f);
+        instance.transform.localScale=Vector3.one*scale;
+        renderers=instance.GetComponentsInChildren<Renderer>();
+        b=renderers[0].bounds;
+        for(int r=1;r<renderers.Length;r++) b.Encapsulate(renderers[r].bounds);
+        instance.transform.position+=Vector3.up*(groundY-b.min.y);
+        var box=root.AddComponent<BoxCollider>();
+        Vector3 localSize=root.transform.InverseTransformVector(b.size);
+        box.size=new Vector3(Mathf.Abs(localSize.x)*colliderInset,Mathf.Abs(localSize.y),Mathf.Abs(localSize.z)*colliderInset);
+        box.center=root.transform.InverseTransformPoint(b.center);
+    }
+    void SetupCamera()
+    {
+        var c=new GameObject("PetTown_Camera"); c.tag="MainCamera"; cam=c.AddComponent<Camera>();cam.orthographic=true;cam.orthographicSize=zoom;
+        cam.transform.rotation=Quaternion.Euler(cameraPitch,cameraYaw,0);
+        cam.transform.position=cameraFocus-cam.transform.forward*75f;
+        cam.backgroundColor=new Color(.66f,.83f,.94f);
+    }
+    void Update()
+    {
+        if(cam==null)return;
+        float dt=Time.deltaTime; worldClock+=dt;
+        if(Input.GetKeyDown(KeyCode.Escape)) { mode=Mode.Play; ClearGhost(); }
+        // The master character's controller owns movement when it is installed.
+        bool masterControlsActive = FindFirstObjectByType<PetTownPlayerControls>() != null;
+        float h=masterControlsActive ? 0f : Input.GetAxisRaw("Horizontal");
+        float v=masterControlsActive ? 0f : Input.GetAxisRaw("Vertical");
+        Vector3 forward=Vector3.ProjectOnPlane(cam.transform.forward,Vector3.up).normalized;
+        Vector3 right=Vector3.ProjectOnPlane(cam.transform.right,Vector3.up).normalized;
+        if(hero!=null && mode==Mode.Play && (Mathf.Abs(h)+Mathf.Abs(v)>.1f))
+        {
+            cameraFreeLook=false;
+            Vector3 move=(forward*v+right*h).normalized*dt*8;
+            Vector3 next=hero.transform.position+move;
+            if(!IsWater(next.x,next.z))
+            {
+                next.y=Ground(next.x,next.z);hero.transform.position=next;
+                // The placeholder face and shoes are authored toward local -Z, not +Z.
+                hero.transform.rotation=Quaternion.Slerp(hero.transform.rotation,Quaternion.LookRotation(usingMeshyPlayer ? move : -move),dt*10);
+            }
+        }
+        // glTFast GLB imports may use Unity Legacy Animation, not Animator.
+        // Control BOTH systems so an imported autoplay Running clip cannot keep playing.
+        bool shouldRun = mode==Mode.Play && (Mathf.Abs(h)+Mathf.Abs(v)>.1f);
+        if (meshyLegacyAnimations != null && meshyLegacyAnimations.Length>0)
+        {
+            foreach (var legacy in meshyLegacyAnimations)
+            {
+                if (legacy==null) continue;
+                if (shouldRun)
+                {
+                    if (!legacy.isPlaying)
+                    {
+                        string clipName = null;
+                        foreach (AnimationState state in legacy)
+                        {
+                            if (state.name.ToLowerInvariant().Contains("running")) { clipName=state.name; break; }
+                            if (clipName==null && state.name.ToLowerInvariant().Contains("walking")) clipName=state.name;
+                            if (clipName==null) clipName=state.name;
+                        }
+                        if (!string.IsNullOrEmpty(clipName))
+                        {
+                            legacy.wrapMode=WrapMode.Loop;
+                            legacy.Play(clipName);
+                        }
+                    }
+                }
+                else if (legacy.isPlaying) legacy.Stop();
+            }
+        }
+        if (meshyAnimator!=null)
+        {
+            // The Legacy Animation component owns imported GLB clips when present.
+            // Disable Animator in that case to prevent competing bone transforms.
+            if (meshyLegacyPresent)
+            {
+                if (meshyAnimator.enabled) meshyAnimator.enabled=false;
+            }
+            else
+            {
+                meshyAnimator.enabled=true;
+                if (meshyAnimator.runtimeAnimatorController!=null)
+                {
+                    if (shouldRun && !meshyWasMoving)
+                    {
+                        meshyAnimator.speed=1f;
+                        meshyAnimator.Play("Running",0,0f);
+                    }
+                    else if (!shouldRun && meshyWasMoving)
+                    {
+                        meshyAnimator.speed=0f;
+                    }
+                }
+                else meshyAnimator.speed=0f;
+            }
+        }
+        meshyWasMoving=shouldRun;
+        if(heroLeftArm!=null && !usingMeshyPlayer)
+        {
+            bool walking=hero!=null && mode==Mode.Play && (Mathf.Abs(h)+Mathf.Abs(v)>.1f);
+            walkPhase+=dt*(walking?11f:3f);
+            float swing=walking?Mathf.Sin(walkPhase)*32f:Mathf.Sin(walkPhase)*3f;
+            heroLeftArm.localRotation=Quaternion.Euler(swing,0,0);
+            heroRightArm.localRotation=Quaternion.Euler(-swing,0,0);
+            heroLeftLeg.localRotation=Quaternion.Euler(-swing*.65f,0,0);
+            heroRightLeg.localRotation=Quaternion.Euler(swing*.65f,0,0);
+        }
+        // Right mouse drag rotates the quarter-view camera around its focus.
+        // Q/E rotate in 45-degree increments; R restores the original quarter view.
+        if(!PetTownCustomizationUI.IsWindowOpen && Input.GetMouseButton(1))
+        {
+            cameraYaw += Input.GetAxis("Mouse X")*3f;
+            cameraPitch = Mathf.Clamp(cameraPitch-Input.GetAxis("Mouse Y")*2f,25f,75f);
+        }
+        if(!PetTownCustomizationUI.IsWindowOpen && Input.GetKeyDown(KeyCode.Q))cameraYaw-=45f;
+        if(!PetTownCustomizationUI.IsWindowOpen && Input.GetKeyDown(KeyCode.E))cameraYaw+=45f;
+        if(!PetTownCustomizationUI.IsWindowOpen && Input.GetKeyDown(KeyCode.R)){cameraYaw=42f;cameraPitch=48f;}
+        // Middle-mouse drag freely pans the camera around the whole map, independent of the
+        // character. Pan speed scales with the current zoom level so it still covers real
+        // ground when zoomed way out instead of crawling at a fixed screen-space rate. Once
+        // released, the camera stays put (doesn't snap back to the character) until the player
+        // actually moves again — otherwise letting go immediately undid the whole point of
+        // panning away to look at the rest of the map.
+        if(!PetTownCustomizationUI.IsWindowOpen && Input.GetMouseButton(2))
+        {
+            float panSpeed = Mathf.Max(zoom,4f)*.045f;
+            Vector3 panDelta=(-right*Input.GetAxis("Mouse X")-forward*Input.GetAxis("Mouse Y"))*panSpeed;
+            if(panDelta.sqrMagnitude>0f)
+            {
+                cameraFocus+=panDelta;
+                if(!cameraFreeLook)
+                {
+                    var ft=FindFirstObjectByType<PetTownPlayerControls>();
+                    freeLookStartCharPos = ft!=null ? ft.transform.position : (hero!=null?hero.transform.position:cameraFocus);
+                }
+                cameraFreeLook=true;
+            }
+        }
+        // Close-up zoom for character face. Keep one camera owner to avoid jitter.
+        float zoomDelta = PetTownCustomizationUI.IsWindowOpen ? 0f : Input.mouseScrollDelta.y;
+        if (!PetTownCustomizationUI.IsWindowOpen && Input.touchCount == 2)
+        {
+            Touch a = Input.GetTouch(0), b = Input.GetTouch(1);
+            float previous = Vector2.Distance(a.position - a.deltaPosition, b.position - b.deltaPosition);
+            float current = Vector2.Distance(a.position, b.position);
+            zoomDelta += (current - previous) * .015f;
+        }
+        // Proportional zoom provides fine control near the character's face.
+        zoom = Mathf.Clamp(zoom * Mathf.Pow(0.84f, zoomDelta), 0.6f, 75f);
+        cam.orthographicSize = zoom;
+        // Follow the controllable master instead of the hidden legacy hero.
+        // Only PetTownGame writes the camera transform (prevents camera jitter).
+        var masterControls = FindFirstObjectByType<PetTownPlayerControls>();
+        Transform followTarget = masterControls != null && masterControls.followCamera
+            ? masterControls.transform : (hero != null ? hero.transform : null);
+        if(cameraFreeLook && followTarget!=null && Vector3.Distance(followTarget.position,freeLookStartCharPos)>0.3f)
+            cameraFreeLook=false; // the character actually moved — resume following it
+        if(followTarget!=null && mode==Mode.Play && !Input.GetMouseButton(2) && !cameraFreeLook)
+            cameraFocus=Vector3.Lerp(cameraFocus,followTarget.position+Vector3.up*1.5f,dt*5f);
+        cam.transform.rotation=Quaternion.Euler(cameraPitch,cameraYaw,0);
+        cam.transform.position=cameraFocus-cam.transform.forward*75f;
+        if((mode==Mode.Start||mode==Mode.Build||mode==Mode.Furniture) && !IsPointerOverUI())
+        {
+            Vector3 p; if(MouseGround(out p))
+            {
+                if(ghost!=null) ghost.transform.position=new Vector3(p.x,Ground(p.x,p.z),p.z);
+                if(Input.GetMouseButtonDown(0)) Place(p);
+            }
+        }
+        if(shop!=null)
+        {
+            UpdatePet(dt);
+            dayTimer+=dt;
+            if(dayTimer>120f) {dayTimer=0;day++;money-=Mathf.Min(80,30+population*2);Message("New day! Shop maintenance paid.");SaveGame();}
+            orderTimer+=dt;
+            if(orderPet<0 && orderTimer>8f) StartOrder();
+            if(orderPet>=0 && Time.time>orderDeadline) FailOrder();
+            customerClock+=dt;
+            // Customers must be served manually. Automatic income is disabled.
+            foreach(var person in villagers) if(person!=null)
+            {
+                var agent=person.GetComponent<NavMeshAgent>();
+                VillagerWander w;
+                if(!villagerWander.TryGetValue(person,out w))
+                {
+                    w=new VillagerWander{goal=VillagerGoal.Stroll,target=PickWanderTarget(person.transform.position),
+                        nextPick=Time.time+UnityEngine.Random.Range(4f,9f), running=false};
+                    villagerWander[person]=w;
+                    if(agent!=null && agent.isOnNavMesh) agent.SetDestination(w.target);
+                }
+                bool arrived = w.goal!=VillagerGoal.AtShop && agent!=null && agent.isOnNavMesh && !agent.pathPending && agent.remainingDistance<1.2f;
+                if(arrived || Time.time>w.nextPick)
+                {
+                    PickNextVillagerGoal(person,w);
+                    if(agent!=null && agent.isOnNavMesh) agent.SetDestination(w.target);
+                }
+                bool moving=false;
+                if(agent!=null && agent.isOnNavMesh)
+                {
+                    agent.speed = w.running ? 3.0f : 1.3f;
+                    moving = !agent.pathPending && agent.velocity.sqrMagnitude > 0.05f;
+                }
+                UpdateVillagerAnim(person,moving,moving && w.running);
+            }
+        }
+        if(Input.GetKeyDown(KeyCode.F5)) SaveGame();
+        if(Input.GetKeyDown(KeyCode.E) && orderPet>=0) ServeOrder();
+    }
+    bool IsPointerOverUI() { return PetTownCustomizationUI.IsScreenPointOverUI(Input.mousePosition); }
+    bool MouseGround(out Vector3 p)
+    {
+        Ray ray=cam.ScreenPointToRay(Input.mousePosition); RaycastHit hit;
+        if(Physics.Raycast(ray,out hit,500f))
+        {
+            p=hit.point; return true;
+        }
+        Plane plane=new Plane(Vector3.up,Vector3.zero);float distance;
+        if(plane.Raycast(ray,out distance)) { p=ray.GetPoint(distance);return true; }
+        p=Vector3.zero;return false;
+    }
+    void Place(Vector3 p)
+    {
+        p=new Vector3(Mathf.Round(p.x/2)*2,Ground(p.x,p.z),Mathf.Round(p.z/2)*2);
+        if (mode != Mode.Furniture && !PetTownWorldSafety.CanPlaceBuilding(p, mode == Mode.Start ? 0 : selected, buildings))
+        { Message("Cannot build: water, steep ground or another building"); return; }
+        if(IsWater(p.x,p.z)) {Message("Cannot build in water");return;}
+        if(mode==Mode.Start)
+        {
+            shop=CreateBuilding(0,p,false);shopPosition=p;CreateHero(p+new Vector3(8,0,8));
+            dogStock=2;catStock=2;rabbitStock=0;inventory=4;CreatePetDisplays();
+            RebakeNavMesh();
+            mode=Mode.Play;Message("Pet Shop opened! Build a town and sell pets.");SaveGame();return;
+        }
+        if(mode==Mode.Furniture)
+        {
+            if(shop==null || Vector3.Distance(p,shopPosition)>12){Message("Furniture must be placed inside the Pet Shop");return;}
+            if(money<50){Message("Not enough coins");return;}
+            money-=50;CreateFurniture(furnitureChoice,p);reputation++;SaveGame();return;
+        }
+        if(mode==Mode.Build)
+        {
+            if(money<costs[selected]) {Message("Not enough coins");return;}
+            money-=costs[selected];
+            CreateBuilding(selected,p,false);
+            RebakeNavMesh();
+            if(selected!=8 && shop!=null) BuildPathTo(shopPosition,p);
+            if(selected==2){population+=2;SpawnVillager(p+new Vector3(5,0,5));SpawnVillager(p+new Vector3(-5,0,-5));}
+            if(selected==5)reputation+=2;
+            if(selected==3||selected==4)reputation+=5;
+            Message(types[selected]+" built");SaveGame();
+        }
+    }
+    // A little roof-color variety per building type makes the town read at a glance instead
+    // of every roof being the exact same red. Built lazily and cached so each kind only
+    // allocates one Material, not one per building.
+    readonly Dictionary<int,Material> roofMatCache = new Dictionary<int,Material>();
+    Material RoofMatFor(int kind)
+    {
+        if (roofMatCache.TryGetValue(kind, out var cached)) return cached;
+        Color c;
+        switch (kind)
+        {
+            case 1: c = new Color(.40f,.52f,.80f); break;  // Home - blue
+            case 2: c = new Color(.56f,.46f,.78f); break;  // Resident House - violet
+            case 3: c = new Color(.93f,.63f,.28f); break;  // Pet Cafe - warm orange
+            case 4: c = new Color(.36f,.70f,.62f); break;  // Pet Hospital - clinical teal
+            default: c = new Color(.82f,.35f,.39f); break; // Pet Shop / fallback - original red
+        }
+        Material m = Mat(c);
+        roofMatCache[kind] = m;
+        return m;
+    }
+    // Lays a simple stepping-stone path from the shop to a newly built building, so the town
+    // feels connected without the player having to manually place Road tiles everywhere.
+    // Purely decorative (Deco — no collider) and regenerated fresh each time the building is
+    // (re)created, same convention as furniture/pet displays: not individually saved.
+    // Buildings here are always open on the -Z (front) and +X (right) sides and walled on
+    // +Z/-X (see CreateBuilding below) — so a path aimed at a building's bare center point
+    // could easily end up heading straight at a real wall instead of the entrance. This finds
+    // the matching building (if `center` is one) and returns a point just outside its open
+    // front-right corner instead, so roads always approach from a side that's actually open.
+    Vector3 EntrancePoint(Vector3 center)
+    {
+        foreach (var b in buildingFloors)
+        {
+            if (Mathf.Abs(b.center.x - center.x) < 0.5f && Mathf.Abs(b.center.z - center.z) < 0.5f)
+                return new Vector3(b.center.x + b.halfW + 0.8f, center.y, b.center.z - b.halfD - 0.8f);
+        }
+        return center;
+    }
+    bool InsideAnyBuildingFootprint(float x, float z, float margin)
+    {
+        foreach (var b in buildingFloors)
+            if (Mathf.Abs(x - b.center.x) < b.halfW + margin && Mathf.Abs(z - b.center.z) < b.halfD + margin) return true;
+        return false;
+    }
+    // A continuous dirt-road ribbon mesh (EasyRoads3D's own dirt texture/material, already in
+    // the project) that hugs the actual terrain height at every sampled point and is clipped
+    // out of any building's footprint and out of water — replaces the old flat stepping-stone
+    // tiles, which could sink into slopes or lay straight across a building's floor since they
+    // only sampled ground height at their own center, not along a real path.
+    void BuildPathTo(Vector3 from, Vector3 to)
+    {
+        Vector3 start = EntrancePoint(from), end = EntrancePoint(to);
+        Vector3 diff = end - start; diff.y = 0;
+        float dist = diff.magnitude;
+        if (dist < 3f) return; // close enough already, don't bother
+        int segments = Mathf.Clamp(Mathf.CeilToInt(dist / 1.4f), 2, 90);
+        var points = new List<Vector3>();
+        for (int s = 0; s <= segments; s++)
+        {
+            float t = s / (float)segments;
+            Vector3 pt = Vector3.Lerp(start, end, t);
+            if (IsWater(pt.x, pt.z)) continue;
+            if (InsideAnyBuildingFootprint(pt.x, pt.z, 0.6f)) continue;
+            pt.y = Ground(pt.x, pt.z) + 0.04f;
+            points.Add(pt);
+        }
+        if (points.Count < 2) return;
+        var pathParent = new GameObject("Path_REPLACEABLE");
+        BuildRoadRibbon(points, 2.2f, pathParent.transform);
+        int lampEvery = 7;
+        for (int i = lampEvery; i < points.Count - 1; i += lampEvery)
+        {
+            Vector3 dir = (points[Mathf.Min(i + 1, points.Count - 1)] - points[i - 1]);
+            dir.y = 0;
+            if (dir.sqrMagnitude < 0.0001f) continue;
+            Vector3 side = Vector3.Cross(Vector3.up, dir.normalized);
+            MakeLampPost(points[i] + side * 1.7f);
+        }
+    }
+    void BuildRoadRibbon(List<Vector3> points, float width, Transform parent)
+    {
+        int n = points.Count;
+        var verts = new Vector3[n * 2];
+        var uvs = new Vector2[n * 2];
+        var tris = new int[(n - 1) * 6];
+        float distAccum = 0f;
+        for (int i = 0; i < n; i++)
+        {
+            Vector3 dir = i == 0 ? (points[1] - points[0]) : i == n - 1 ? (points[i] - points[i - 1]) : (points[i + 1] - points[i - 1]);
+            dir.y = 0;
+            Vector3 side = (dir.sqrMagnitude > 0.0001f ? Vector3.Cross(Vector3.up, dir.normalized) : Vector3.right) * (width * .5f);
+            verts[i * 2] = points[i] - side;
+            verts[i * 2 + 1] = points[i] + side;
+            if (i > 0) distAccum += Vector3.Distance(points[i], points[i - 1]);
+            float v = distAccum / 2.5f; // tile roughly every 2.5m along the road's length
+            uvs[i * 2] = new Vector2(0, v);
+            uvs[i * 2 + 1] = new Vector2(1, v);
+        }
+        int ti = 0;
+        for (int i = 0; i < n - 1; i++)
+        {
+            int a = i * 2, b = i * 2 + 1, c = (i + 1) * 2, d = (i + 1) * 2 + 1;
+            tris[ti++] = a; tris[ti++] = c; tris[ti++] = b;
+            tris[ti++] = b; tris[ti++] = c; tris[ti++] = d;
+        }
+        var mesh = new Mesh(); mesh.vertices = verts; mesh.uv = uvs; mesh.triangles = tris;
+        mesh.RecalculateNormals(); mesh.RecalculateBounds();
+        var go = new GameObject("Road_Ribbon");
+        go.transform.SetParent(parent, true);
+        go.AddComponent<MeshFilter>().sharedMesh = mesh;
+        go.AddComponent<MeshRenderer>().sharedMaterial = dirtRoadMat != null ? dirtRoadMat : road;
+        MarkNavMeshIgnore(go); // thin decorative ground decal — terrain underneath already carves the navmesh
+    }
+    // Perimeter fence for Park/Zoo using the real Low Poly Medieval Starter Pack wooden fence
+    // kit, with a gate segment in the middle of the south side (falls back to bare posts if the
+    // asset is ever missing). Replaces plain primitive posts so the boundary reads as an actual
+    // built structure, and gives it a clear single entrance instead of a solid unbroken ring.
+    void BuildFenceRing(Vector3 center, float halfSize, Transform parent)
+    {
+        float side = halfSize*2f;
+        float spacing = 2.6f;
+        int perSide = Mathf.Max(3, Mathf.RoundToInt(side/spacing));
+        GameObject fencePrefab = Resources.Load<GameObject>(FenceResource);
+        GameObject gatePrefab = Resources.Load<GameObject>(GateResource);
+        for(int fs=0; fs<4; fs++)
+        for(int fi=0; fi<perSide; fi++)
+        {
+            float t = fi/(float)(perSide-1)*side-halfSize;
+            bool isGateSpot = fs==0 && fi==perSide/2;
+            Vector3 local = fs==0?new Vector3(t,0,-halfSize): fs==1?new Vector3(t,0,halfSize): fs==2?new Vector3(-halfSize,0,t): new Vector3(halfSize,0,t);
+            float yaw = (fs==0||fs==1) ? 0f : 90f;
+            Vector3 pos = center+local;
+            GameObject prefab = isGateSpot ? gatePrefab : fencePrefab;
+            if(prefab==null)
+            {
+                Deco(PrimitiveType.Cylinder,"Fence_Post",pos+Vector3.up*.45f,new Vector3(.08f,.45f,.08f),wood,parent);
+                continue;
+            }
+            var segRoot=new GameObject(isGateSpot?"Gate":"Fence_Segment");
+            segRoot.transform.SetParent(parent,true);
+            segRoot.transform.position=pos;
+            GameObject instance=Instantiate(prefab,segRoot.transform);
+            instance.name="Model";
+            instance.transform.localPosition=Vector3.zero;
+            instance.transform.localRotation=Quaternion.Euler(0,yaw,0);
+            instance.transform.localScale=Vector3.one;
+            foreach(var c in instance.GetComponentsInChildren<Collider>()) Destroy(c);
+            MarkNavMeshIgnore(instance);
+            StartCoroutine(FitPropWithColliderNextFrame(instance,segRoot,center.y,isGateSpot?1.6f:1.1f,.9f));
+        }
+    }
+    // A simple primitive lamp post — pole, lamp head, warm glow — dropped along paths for a
+    // little night-time atmosphere. Built entirely from primitives, no new assets needed.
+    void MakeLampPost(Vector3 p)
+    {
+        var root = new GameObject("Lamp_Post_REPLACEABLE"); root.transform.position = p;
+        Deco(PrimitiveType.Cylinder, "Pole", p + Vector3.up * 1.1f, new Vector3(.08f, 1.1f, .08f), dark, root.transform);
+        Deco(PrimitiveType.Sphere, "Lamp_Head", p + Vector3.up * 2.25f, new Vector3(.32f, .32f, .32f), gold, root.transform);
+        var lightGO = new GameObject("Lamp_Light"); lightGO.transform.SetParent(root.transform, false);
+        lightGO.transform.position = p + Vector3.up * 2.25f;
+        var lt = lightGO.AddComponent<Light>();
+        lt.type = LightType.Point; lt.color = new Color(1f, .85f, .55f); lt.intensity = 1.1f; lt.range = 7f;
+    }
+    GameObject CreateBuilding(int kind,Vector3 p,bool rival)
+    {
+        var root=new GameObject((rival?"Dark_":"")+types[kind].Replace(" ","_")+"_REPLACEABLE");
+        root.transform.position=p;
+        Material m=rival?dark:wall;
+        if(kind==8)
+        {
+            FlattenTerrain(p,3f,3f,p.y);
+            Deco(PrimitiveType.Cube,"Road_Tile",p+Vector3.up*.06f,new Vector3(5,.12f,5),road,root.transform);
+            // Thin dark curb along all four edges so a purchased Road tile reads as an actual
+            // road/sidewalk instead of a flat gray square dropped on the grass.
+            float rw=5f, rhalf=rw/2f, curbW=.22f;
+            Deco(PrimitiveType.Cube,"Curb_N",p+new Vector3(0,.1f, rhalf-curbW/2f),new Vector3(rw,.06f,curbW),dark,root.transform);
+            Deco(PrimitiveType.Cube,"Curb_S",p+new Vector3(0,.1f,-(rhalf-curbW/2f)),new Vector3(rw,.06f,curbW),dark,root.transform);
+            Deco(PrimitiveType.Cube,"Curb_E",p+new Vector3(rhalf-curbW/2f,.1f,0),new Vector3(curbW,.06f,rw),dark,root.transform);
+            Deco(PrimitiveType.Cube,"Curb_W",p+new Vector3(-(rhalf-curbW/2f),.1f,0),new Vector3(curbW,.06f,rw),dark,root.transform);
+        }
+        else if(kind==2)
+        {
+            // Villager housing uses real Low Poly Medieval Starter Pack house models instead of
+            // the plain procedural box — these are solid/closed meshes with no walk-in interior,
+            // so no floor/furniture is built for them; a BoxCollider sized to the fitted model
+            // keeps them solid obstacles for players, villagers and the navmesh alike.
+            FlattenTerrain(p,4.6f,4.6f,p.y);
+            GameObject housePrefab = MedievalHouseResources.Length>0 ? Resources.Load<GameObject>(MedievalHouseResources[UnityEngine.Random.Range(0,MedievalHouseResources.Length)]) : null;
+            if(housePrefab!=null)
+            {
+                GameObject instance=Instantiate(housePrefab,root.transform);
+                instance.name="Model";
+                instance.transform.localPosition=Vector3.zero;
+                instance.transform.localRotation=Quaternion.Euler(0,UnityEngine.Random.Range(0f,360f),0);
+                instance.transform.localScale=Vector3.one;
+                foreach(var c in instance.GetComponentsInChildren<Collider>()) Destroy(c);
+                MarkNavMeshIgnore(instance);
+                StartCoroutine(FitPropWithColliderNextFrame(instance,root,p.y,UnityEngine.Random.Range(3.4f,4.2f),.8f));
+            }
+            else
+            {
+                // Asset missing — fall back to the old simple procedural box house.
+                float w=7,d=7;
+                Material floorMatF=rival?Tiled(dark,w,d):Tiled(wood,w,d);
+                Material wallMatBDF=Tiled(m,w,5), wallMatLRF=Tiled(m,d,5);
+                Deco(PrimitiveType.Cube,"Editable_Floor",p+Vector3.up*.2f,new Vector3(w,.4f,d),floorMatF,root.transform);
+                Part(PrimitiveType.Cube,"Back_Wall",p+new Vector3(0,2.5f,d/2),new Vector3(w,5,.35f),wallMatBDF,root.transform);
+                Part(PrimitiveType.Cube,"Left_Wall",p+new Vector3(-w/2,2.5f,0),new Vector3(.35f,5,d),wallMatLRF,root.transform);
+                Deco(PrimitiveType.Cube,"Toggle_Roof",p+new Vector3(0,5.4f,0),new Vector3(w+1,.65f,d+1),rival?dark:RoofMatFor(kind),root.transform);
+            }
+        }
+        else if(kind==5||kind==6||kind==7)
+        {
+            float oh=(kind==7?22:15)/2f;
+            FlattenTerrain(p,oh,oh,p.y);
+            // Park gets a slightly brighter/warmer green than the default grass, Zoo gets a
+            // dirt-path tint — so the placed area actually reads as something distinct instead
+            // of blending straight into the surrounding terrain (previously the only visible
+            // sign a Park/Zoo existed at all was its fence posts).
+            Material groundMat = kind==6?water : kind==7?Tiled(dirtRoadMat!=null?dirtRoadMat:road,kind==7?22:15,kind==7?22:15,3f) : Mat(new Color(.46f,.72f,.40f));
+            Deco(PrimitiveType.Cube,"Open_Ground",p+Vector3.up*.12f,new Vector3(kind==7?22:15,.25f,kind==7?22:15),groundMat,root.transform);
+            if(kind==5) for(int i=0;i<4;i++) MakeTree(p+new Vector3(i*3-4,0,5));
+            if(kind==7) for(int i=0;i<4;i++) Part(PrimitiveType.Cube,"Zoo_Enclosure",p+new Vector3(i*4-6,.4f,0),new Vector3(3,.8f,4),wood,root.transform);
+            if(kind==5||kind==7)
+            {
+                // A real wooden-fence-kit perimeter (Low Poly Medieval Starter Pack) with a gate
+                // at the entrance-facing corner, instead of bare primitive posts — reads clearly
+                // as an intentional boundary instead of random poles scattered on the ground.
+                BuildFenceRing(p,oh,root.transform);
+            }
+        }
+        else
+        {
+            bool open=kind==0||kind==1||kind==2||kind==3||kind==4;
+            float w=kind==0?15:kind==2?7:11, d=kind==0?13:kind==2?7:10;
+            // 건물 발밑 지형을 평평하게 다듬어서 "땅에 파묻힘/붕 뜸" 문제를 없앤다.
+            FlattenTerrain(p,w/2f,d/2f,p.y);
+            bool rivalBuild = rival;
+            Material floorMat = rivalBuild ? Tiled(dark,w,d) : Tiled(wood,w,d);
+            Material wallMatBD = Tiled(m,w,5);
+            Material wallMatLR = Tiled(m,d,5);
+            // 바닥/몰딩/창틀/지붕은 Deco()로 만들어서 콜라이더가 없음 → 입구가 열려 있으면
+            // 캐릭터가 "턱"에 걸리지 않고 그대로 걸어 들어올 수 있다. 실제 벽(Part)만 충돌 처리됨.
+            Deco(PrimitiveType.Cube,"Editable_Floor",p+Vector3.up*.2f,new Vector3(w,.4f,d),floorMat,root.transform);
+            buildingFloors.Add(new BuildingFloor{center=p,halfW=w/2f,halfD=d/2f,floorY=p.y+.4f});
+            Part(PrimitiveType.Cube,"Back_Wall",p+new Vector3(0,2.5f,d/2),new Vector3(w,5,.35f),wallMatBD,root.transform);
+            Deco(PrimitiveType.Cube,"Back_Trim",p+new Vector3(0,4.85f,d/2-.23f),new Vector3(w,.28f,.15f),trim,root.transform);
+            for(int i=-1;i<=1;i++)
+            {
+                Deco(PrimitiveType.Cube,"Window_Glass",p+new Vector3(i*w*.27f,2.95f,d/2-.28f),new Vector3(1.25f,1.55f,.09f),windowMat,root.transform);
+                Deco(PrimitiveType.Cube,"Window_Sill",p+new Vector3(i*w*.27f,2.13f,d/2-.37f),new Vector3(1.55f,.17f,.22f),trim,root.transform);
+            }
+            Part(PrimitiveType.Cube,"Left_Wall",p+new Vector3(-w/2,2.5f,0),new Vector3(.35f,5,d),wallMatLR,root.transform);
+            if(!open)
+            {
+                Part(PrimitiveType.Cube,"Right_Wall",p+new Vector3(w/2,2.5f,0),new Vector3(.35f,5,d),wallMatLR,root.transform);
+                Part(PrimitiveType.Cube,"Front_Wall",p+new Vector3(0,2.5f,-d/2),new Vector3(w,5,.35f),wallMatBD,root.transform);
+            }
+            Deco(PrimitiveType.Cube,"Foundation_Trim",p+new Vector3(0,.39f,0),new Vector3(w+.35f,.13f,d+.35f),trim,root.transform);
+            var top=Deco(PrimitiveType.Cube,"Toggle_Roof",p+new Vector3(0,5.4f,0),new Vector3(w+1,.65f,d+1),rival?dark:RoofMatFor(kind),root.transform);
+            top.SetActive(!open||showRoofs);
+            if(kind==0&&!rival)
+            {
+                shop=root;shopPosition=p;
+                CreateFurniture(0,p+new Vector3(0,0,-2));
+                CreateFurniture(1,p+new Vector3(-4,0,2));
+                CreateFurniture(2,p+new Vector3(4,0,2));
+            }
+            // Auto-furnish every other indoor building type too, not just the Pet Shop — an
+            // empty room reads as unfinished. Each uses the same 6 Furniture/*.prefab pieces,
+            // just arranged to suit what that building is for, and kept well clear of the open
+            // front/right side so nothing blocks the entrance villagers walk through.
+            if(kind==1&&!rival) // Home
+            {
+                CreateFurniture(4,p+new Vector3(0,0,0));      // Table
+                CreateFurniture(3,p+new Vector3(1.6f,0,-.2f)); // Chair
+                CreateFurniture(5,p+new Vector3(-3.6f,0,3.2f)); // Plant
+            }
+            if(kind==2&&!rival) // Resident House — gives the "sit" animation an actual chair
+                                 // to eventually be triggered by, instead of nothing at all.
+            {
+                CreateFurniture(4,p+new Vector3(-1f,0,-.6f));  // Table
+                CreateFurniture(3,p+new Vector3(.7f,0,-.6f));  // Chair
+                CreateFurniture(5,p+new Vector3(2f,0,1.9f));   // Plant
+            }
+            if(kind==3&&!rival) // Pet Cafe
+            {
+                CreateFurniture(0,p+new Vector3(0,0,-3f));     // Counter
+                CreateFurniture(4,p+new Vector3(-3f,0,2f));    // Table
+                CreateFurniture(3,p+new Vector3(-1.4f,0,2f));  // Chair
+                CreateFurniture(5,p+new Vector3(3.6f,0,3.2f)); // Plant
+            }
+            if(kind==4&&!rival) // Pet Hospital
+            {
+                CreateFurniture(0,p+new Vector3(0,0,-3f));     // Counter
+                CreateFurniture(2,p+new Vector3(-3.6f,0,2f));  // Display
+                CreateFurniture(5,p+new Vector3(3.6f,0,3.2f)); // Plant
+            }
+        }
+        if(!rival)buildings.Add(root);
+        return root;
+    }
+    // 가구별로 쓸 실제 에셋 프리팹 경로(Resources 기준)와 목표 높이(미터).
+    // 0 Counter(카운터)→주방 벤치, 1 Pet Bed(펫 베드)→바구니, 2 Display(진열대)→TV 스탠드(오픈 선반),
+    // 3 Chair(의자)→식탁 의자, 4 Table(테이블)→식탁, 5 Plant(화분)→덤불.
+    static readonly string[] FurnitureResource={"Furniture/FurnCounter","Furniture/FurnPetBed","Furniture/FurnDisplay","Furniture/FurnChair","Furniture/FurnTable","Furniture/FurnPlant"};
+    static readonly float[] FurnitureHeight={1.05f,.55f,1.0f,.9f,.95f,1.1f};
+    void CreateFurniture(int type,Vector3 p)
+    {
+        var root=new GameObject("Furniture_"+furniture[type]+"_REPLACEABLE");root.transform.position=p;
+        GameObject prefab=Resources.Load<GameObject>(FurnitureResource[type]);
+        if(prefab!=null)
+        {
+            GameObject instance=Instantiate(prefab,root.transform);
+            instance.name="Model";
+            instance.transform.localPosition=Vector3.zero;
+            // A small random yaw so repeated furniture layouts (every Home/Resident House
+            // has the same set) don't look perfectly identical/robotic, without rotating far
+            // enough to face a chair/table into a wall.
+            instance.transform.localRotation=Quaternion.Euler(0,UnityEngine.Random.Range(-8f,8f),0);
+            MarkNavMeshIgnore(root);
+            // Scaling right after Instantiate() reads stale/unreliable Renderer.bounds (same bug
+            // that made pet models come out invisible or screen-filling) — wait one frame first.
+            StartCoroutine(FitModelNextFrame(instance,p.y,FurnitureHeight[type]));
+        }
+        else
+        {
+            // 에셋을 못 찾으면(아직 Resources에 안 들어갔거나 삭제됨) 예전 도형 가구로 안전하게 대체.
+            var m=type==5?grass:type==1?roofMat:wood;
+            Part(PrimitiveType.Cube,"Body",p+Vector3.up*.65f,new Vector3(type==0?3:1.6f,1.2f,1.4f),m,root.transform);
+            if(type==5) Part(PrimitiveType.Sphere,"Leaves",p+Vector3.up*1.7f,new Vector3(1.5f,1.4f,1.5f),grass,root.transform);
+        }
+        props.Add(root);
+    }
+    void CreateHero(Vector3 p)
+    {
+        hero=new GameObject("PLAYER_Customizable_3D");hero.transform.position=new Vector3(p.x,Ground(p.x,p.z),p.z);
+        RebuildHero();
+    }
+    // All body components are child objects and can be replaced with Meshy meshes later.
+    Transform Joint(string name,Vector3 local,Transform parent)
+    {
+        var joint=new GameObject(name).transform;
+        joint.SetParent(parent,false);joint.localPosition=local;
+        return joint;
+    }
+    GameObject LocalPart(PrimitiveType type,string name,Transform parent,Vector3 pos,Vector3 size,Material material)
+    {
+        GameObject item=Part(type,name,parent.position, size,material,parent);
+        item.transform.localPosition=pos;item.transform.localRotation=Quaternion.identity;
+        Collider col=item.GetComponent<Collider>();if(col!=null)Destroy(col);
+        return item;
+    }
+    void BuildPerson(Transform root,bool player,int variant)
+    {
+        Material outfit=player?shirt:Mat(Color.HSVToRGB((variant*.17f+.1f)%1f,.43f,.85f));
+        var torso=LocalPart(PrimitiveType.Capsule,"BODY_REPLACEABLE",root,new Vector3(0,1.53f,0),new Vector3(.92f,1.04f,.68f),outfit);
+        torso.transform.localScale*=1f+(player?bodyStyle*.08f:0);
+        LocalPart(PrimitiveType.Sphere,"NECK",root,new Vector3(0,2.10f,0),new Vector3(.29f,.29f,.27f),skin);
+        LocalPart(PrimitiveType.Sphere,"FACE_REPLACEABLE",root,new Vector3(0,2.68f,0),new Vector3(1.23f,1.16f,1.09f),skin);
+        LocalPart(PrimitiveType.Sphere,"HAIR_REPLACEABLE",root,new Vector3(0,3.12f,.04f),new Vector3(1.27f,.48f+(player?hairStyle*.1f:0),1.12f),player?hairMat:dark);
+        LocalPart(PrimitiveType.Sphere,"Hair_Fringe",root,new Vector3(0,2.95f,-.48f),new Vector3(1.03f,.24f,.28f),player?hairMat:dark);
+        for(int sign=-1;sign<=1;sign+=2)
+        {
+            LocalPart(PrimitiveType.Sphere,"Eye",root,new Vector3(sign*.245f,2.69f,-.514f),new Vector3(.145f,.19f,.10f),dark);
+            LocalPart(PrimitiveType.Sphere,"Eye_Shine",root,new Vector3(sign*.27f,2.76f,-.59f),new Vector3(.05f,.06f,.03f),trim);
+            LocalPart(PrimitiveType.Sphere,"Cheek",root,new Vector3(sign*.44f,2.49f,-.43f),new Vector3(.19f,.09f,.04f),blush);
+        }
+        LocalPart(PrimitiveType.Sphere,"Nose",root,new Vector3(0,2.52f,-.552f),new Vector3(.095f,.075f,.055f),gold);
+        Transform leftArm=Joint("LEFT_ARM_PIVOT",new Vector3(-.57f,1.98f,0),root);
+        Transform rightArm=Joint("RIGHT_ARM_PIVOT",new Vector3(.57f,1.98f,0),root);
+        LocalPart(PrimitiveType.Capsule,"LEFT_ARM_REPLACEABLE",leftArm,new Vector3(-.13f,-.46f,0),new Vector3(.33f,.61f,.36f),outfit);
+        LocalPart(PrimitiveType.Capsule,"RIGHT_ARM_REPLACEABLE",rightArm,new Vector3(.13f,-.46f,0),new Vector3(.33f,.61f,.36f),outfit);
+        LocalPart(PrimitiveType.Sphere,"Left_Hand",leftArm,new Vector3(-.15f,-.91f,0),new Vector3(.32f,.30f,.31f),skin);
+        LocalPart(PrimitiveType.Sphere,"Right_Hand",rightArm,new Vector3(.15f,-.91f,0),new Vector3(.32f,.30f,.31f),skin);
+        Transform leftLeg=Joint("LEFT_LEG_PIVOT",new Vector3(-.25f,1.06f,0),root);
+        Transform rightLeg=Joint("RIGHT_LEG_PIVOT",new Vector3(.25f,1.06f,0),root);
+        float legExtra=player?legStyle*.055f:0;
+        LocalPart(PrimitiveType.Capsule,"LEFT_LEG_REPLACEABLE",leftLeg,new Vector3(0,-.39f,0),new Vector3(.38f,.55f+legExtra,.4f),dark);
+        LocalPart(PrimitiveType.Capsule,"RIGHT_LEG_REPLACEABLE",rightLeg,new Vector3(0,-.39f,0),new Vector3(.38f,.55f+legExtra,.4f),dark);
+        LocalPart(PrimitiveType.Sphere,"Left_Shoe",leftLeg,new Vector3(0,-.79f,-.15f),new Vector3(.46f,.24f,.65f),wood);
+        LocalPart(PrimitiveType.Sphere,"Right_Shoe",rightLeg,new Vector3(0,-.79f,-.15f),new Vector3(.46f,.24f,.65f),wood);
+        if(player)
+        {
+            heroLeftArm=leftArm;heroRightArm=rightArm;heroLeftLeg=leftLeg;heroRightLeg=rightLeg;
+            if(accessory>0)
+            {
+                LocalPart(PrimitiveType.Cylinder,"ACCESSORY_REPLACEABLE",root,new Vector3(0,3.42f,0),new Vector3(1.4f,.12f,1.35f),roofMat);
+                LocalPart(PrimitiveType.Cylinder,"Hat_Top",root,new Vector3(0,3.62f,.13f),new Vector3(1f,.23f,1f),roofMat);
+            }
+        }
+    }
+    void RebuildHero()
+    {
+        if(hero==null)return;
+        for(int i=hero.transform.childCount-1;i>=0;i--) Destroy(hero.transform.GetChild(i).gameObject);
+        heroLeftArm=heroRightArm=heroLeftLeg=heroRightLeg=null;
+        meshyAnimator=null;
+        meshyWasMoving=false;
+        meshyLegacyAnimations=null;
+        meshyLegacyPresent=false;
+        usingMeshyPlayer=false;
+
+        // 새 마스터 캐릭터(헤어/옷 커스터마이징 되는 쪽)가 준비되어 있으면 그걸 실제 플레이어로 쓰고,
+        // 예전 Meshy 스쿨걸/도형 캐릭터는 아예 만들지 않는다. (PetTownGame.Update()의 64번째 줄 근처 로직이
+        // PetTownPlayerControls가 씬에 하나라도 있으면 레거시 hero 렌더러를 자동으로 숨겨주지만,
+        // 애초에 안 만들면 숨길 것도 없어서 더 깔끔함.)
+        GameObject existingMaster = GameObject.Find("PetTown_MasterCharacter");
+        GameObject masterPrefab = Resources.Load<GameObject>("MasterPlayer");
+        if (masterPrefab != null)
+        {
+            if (existingMaster == null)
+            {
+                GameObject masterInstance = Instantiate(masterPrefab, hero.transform.position, Quaternion.identity);
+                masterInstance.name = "PetTown_MasterCharacter";
+                if (masterInstance.GetComponent<PetTownPlayerControls>() == null)
+                    masterInstance.AddComponent<PetTownPlayerControls>();
+                MarkNavMeshIgnore(masterInstance);
+            }
+            Debug.Log("Pet Town 3D: Master character is the active player.");
+            return;
+        }
+        Debug.LogWarning("Pet Town 3D: MasterPlayer prefab not found. Falling back to legacy character. " +
+                          "Use menu Pet Town 3D > Install Master Player once in the Unity Editor.");
+
+        GameObject model=Resources.Load<GameObject>("MeshyPlayer");
+        if(model!=null)
+        {
+            GameObject instance=Instantiate(model,hero.transform);
+            instance.name="MESHY_CHARACTER_REPLACEABLE";
+            instance.transform.localPosition=Vector3.zero;
+            instance.transform.localRotation=Quaternion.identity;
+            MarkNavMeshIgnore(instance);
+            // Normalize the imported FBX height and place its feet on the ground.
+            var renderers=instance.GetComponentsInChildren<Renderer>();
+            if(renderers.Length>0)
+            {
+                Bounds bounds=renderers[0].bounds;
+                for(int i=1;i<renderers.Length;i++)bounds.Encapsulate(renderers[i].bounds);
+                float scale=Mathf.Clamp(3.3f/Mathf.Max(.001f,bounds.size.y), .01f, 100f);
+                instance.transform.localScale=Vector3.one*scale;
+                // Bounds must be recalculated after scaling.
+                renderers=instance.GetComponentsInChildren<Renderer>();
+                bounds=renderers[0].bounds;
+                for(int i=1;i<renderers.Length;i++)bounds.Encapsulate(renderers[i].bounds);
+                instance.transform.position+=Vector3.up*(hero.transform.position.y-bounds.min.y);
+            }
+            foreach(var c in instance.GetComponentsInChildren<Collider>())Destroy(c);
+            meshyAnimator=instance.GetComponentInChildren<Animator>(true);
+            if(meshyAnimator==null)meshyAnimator=instance.AddComponent<Animator>();
+            RuntimeAnimatorController controller=Resources.Load<RuntimeAnimatorController>("MeshyRun");
+            if(controller!=null)meshyAnimator.runtimeAnimatorController=controller;
+            meshyAnimator.applyRootMotion=false;
+            meshyLegacyAnimations=instance.GetComponentsInChildren<Animation>(true);
+            meshyLegacyPresent=false;
+            foreach(var legacy in meshyLegacyAnimations)
+            {
+                if(legacy==null)continue;
+                int clipCount=0;
+                foreach(AnimationState state in legacy)clipCount++;
+                if(clipCount>0)meshyLegacyPresent=true;
+                legacy.playAutomatically=false;
+                legacy.Stop();
+            }
+            if(meshyLegacyPresent) meshyAnimator.enabled=false;
+            Debug.Log("Pet Town GLB: legacy Animation components="+meshyLegacyAnimations.Length+
+                      ", imported clips="+(meshyLegacyPresent?"yes":"no")+
+                      ", Animator controller="+(meshyAnimator.runtimeAnimatorController!=null));
+            // Never autoplay a running-only GLB while the player is stationary.
+            meshyAnimator.speed=0f;
+            usingMeshyPlayer=true;
+            Debug.Log("Pet Town 3D: Meshy player model loaded.");
+            return;
+        }
+        Debug.LogWarning("Pet Town 3D: MeshyPlayer prefab not found. Showing placeholder character. Use menu Pet Town 3D > Install Meshy Player.");
+        BuildPerson(hero.transform,true,0);
+    }
+    void SpawnVillager(Vector3 p)
+    {
+        if(IsWater(p.x,p.z))p=shopPosition+new Vector3(10,0,10);
+        var root=new GameObject("NPC_SINGLE_ROOT_REPLACEABLE");
+        root.transform.position=new Vector3(p.x,Ground(p.x,p.z),p.z);
+        VillagerAnim animInfo;
+        if(SpawnVillagerModel(root.transform,out animInfo))
+        {
+            if(animInfo!=null) villagerAnimInfo[root]=animInfo;
+        }
+        else BuildPerson(root.transform,false,villagers.Count);
+        // NavMeshAgent drives this villager's actual movement and obstacle avoidance; our own
+        // code only decides WHERE it wants to go (PickNextVillagerGoal) and reads agent.velocity
+        // to pick which animation to play. This replaces the old hand-rolled capsule-avoidance
+        // movement, which kept finding new ways to fail (corner clipping, sideways jitter).
+        var agent=root.AddComponent<NavMeshAgent>();
+        agent.radius=0.4f; agent.height=Mathf.Max(1f,GetHeroTargetHeight());
+        agent.speed=1.3f; agent.angularSpeed=420f; agent.acceleration=10f;
+        agent.stoppingDistance=0.3f; agent.autoBraking=true; agent.baseOffset=0f;
+        if(NavMesh.SamplePosition(root.transform.position,out NavMeshHit navHit,6f,NavMesh.AllAreas))
+            agent.Warp(navHit.position);
+        villagers.Add(root);
+    }
+
+    // Meshy villager models live in Resources/Villagers/<name>.glb. Add more paths here as
+    // more are made — one is picked at random for each new villager.
+    static readonly string[] VillagerResources = { "Villagers/Villager_01", "Villagers/Villager_02", "Villagers/Villager_03", "Villagers/Villager_04", "Villagers/Villager_05" };
+    bool SpawnVillagerModel(Transform parent, out VillagerAnim animInfo)
+    {
+        animInfo=null;
+        string resourcePath = VillagerResources[UnityEngine.Random.Range(0, VillagerResources.Length)];
+        GameObject model = Resources.Load<GameObject>(resourcePath);
+        if (model == null) return false;
+
+        GameObject instance = Instantiate(model, parent);
+        instance.name = "VILLAGER_MODEL_REPLACEABLE";
+        instance.transform.localPosition = Vector3.zero;
+        instance.transform.localRotation = Quaternion.identity;
+        instance.transform.localScale = Vector3.one;
+        MarkNavMeshIgnore(instance);
+
+        // Measure height from the mesh's own (pose-independent) bounds rather than
+        // Renderer.bounds — a SkinnedMeshRenderer's world bounds can read back wrong
+        // (near-zero) on the very first frame after Instantiate(), which is what made
+        // earlier villagers scale up far too large.
+        float minY, maxY;
+        if (MeasureLocalHeight(instance, out minY, out maxY) && maxY - minY > 0.01f)
+        {
+            float feetWorldY = minY;
+            float scale = Mathf.Clamp(GetHeroTargetHeight() / (maxY - minY), .01f, 100f);
+            instance.transform.localScale = Vector3.one * scale;
+            float pivotY = instance.transform.position.y;
+            float newFeetWorldY = pivotY + (feetWorldY - pivotY) * scale;
+            instance.transform.position += Vector3.up * (parent.position.y - newFeetWorldY);
+        }
+
+        // Villagers avoid walls via raycasts in Update(), so they don't need their own colliders.
+        foreach (var c in instance.GetComponentsInChildren<Collider>()) Destroy(c);
+
+        // glTFast can import animated glb files either as a legacy Animation component
+        // (one AnimationState per clip) or as a Mecanim Animator with an auto-generated
+        // AnimatorController (one state per clip, state name == clip name). Handle both —
+        // if neither is wired up, the model just sits frozen in its bind/A-pose while we
+        // move it, which is exactly the "sliding T-pose" symptom.
+        var legacy = instance.GetComponentInChildren<Animation>(true);
+        var animator = instance.GetComponentInChildren<Animator>(true);
+        string idleName = null, walkName = null, runName = null, firstName = null;
+        if (legacy != null)
+        {
+            foreach (AnimationState st in legacy)
+            {
+                st.wrapMode = WrapMode.Loop;
+                if (st.clip != null) StripBakedRootMotion(st.clip);
+                ClassifyClip(st.name, ref idleName, ref walkName, ref runName, ref firstName);
+            }
+            if (walkName == null) walkName = runName;
+            if (runName == null) runName = walkName;
+            if (idleName == null) idleName = walkName ?? firstName;
+            if (idleName != null)
+            {
+                legacy.wrapMode = WrapMode.Loop;
+                legacy.Play(idleName);
+                animInfo = new VillagerAnim { anim = legacy, idleClip = idleName, walkClip = walkName, runClip = runName, model = instance.transform };
+                if (animator != null) animator.enabled = false; // don't fight the legacy component over bones
+            }
+        }
+        if (animInfo == null && animator != null && animator.runtimeAnimatorController != null)
+        {
+            var clips = animator.runtimeAnimatorController.animationClips;
+            idleName = walkName = runName = firstName = null;
+            if (clips != null)
+                foreach (var clip in clips)
+                    if (clip != null) { StripBakedRootMotion(clip); ClassifyClip(clip.name, ref idleName, ref walkName, ref runName, ref firstName); }
+            if (walkName == null) walkName = runName;
+            if (runName == null) runName = walkName;
+            if (idleName == null) idleName = walkName ?? firstName;
+            if (idleName != null)
+            {
+                animator.applyRootMotion = false;
+                animator.enabled = true;
+                animator.speed = 1f;
+                animator.Play(idleName, 0, 0f);
+                animInfo = new VillagerAnim { animator = animator, idleClip = idleName, walkClip = walkName, runClip = runName, model = instance.transform };
+            }
+        }
+        AnimationClip[] allClips = Resources.LoadAll<AnimationClip>(resourcePath);
+        if (animInfo == null)
+        {
+            // Some glTFast imports add an Animator but never wire a RuntimeAnimatorController
+            // to it — the clips still exist as sub-assets of the .glb file itself, so pull them
+            // directly with Resources.LoadAll and drive them through our own legacy Animation
+            // component instead of relying on whatever (if anything) glTFast hooked up.
+            if (allClips != null && allClips.Length > 0)
+            {
+                var legacyPlayer = instance.GetComponent<Animation>();
+                if (legacyPlayer == null) legacyPlayer = instance.AddComponent<Animation>();
+                idleName = walkName = runName = firstName = null;
+                foreach (var clip in allClips)
+                {
+                    if (clip == null) continue;
+                    StripBakedRootMotion(clip);
+                    clip.legacy = true;
+                    legacyPlayer.AddClip(clip, clip.name);
+                    var state = legacyPlayer[clip.name];
+                    if (state != null) state.wrapMode = WrapMode.Loop;
+                    ClassifyClip(clip.name, ref idleName, ref walkName, ref runName, ref firstName);
+                }
+                if (walkName == null) walkName = runName;
+                if (runName == null) runName = walkName;
+                if (idleName == null) idleName = walkName ?? firstName;
+                if (idleName != null)
+                {
+                    legacyPlayer.wrapMode = WrapMode.Loop;
+                    legacyPlayer.Play(idleName);
+                    animInfo = new VillagerAnim { anim = legacyPlayer, idleClip = idleName, walkClip = walkName, runClip = runName, model = instance.transform };
+                    if (animator != null) animator.enabled = false;
+                }
+            }
+        }
+        string allNames = allClips != null ? string.Join(",", Array.ConvertAll(allClips, c => c != null ? c.name : "null")) : "none";
+        Debug.Log("Pet Town 3D villager anim: legacy=" + (legacy != null) +
+                   " animator=" + (animator != null) +
+                   " controller=" + (animator != null && animator.runtimeAnimatorController != null) +
+                   " clipNames=[" + allNames + "]" +
+                   " resolved idle=" + (animInfo != null ? animInfo.idleClip : "-") +
+                   " walk=" + (animInfo != null ? animInfo.walkClip : "-") +
+                   " run=" + (animInfo != null ? animInfo.runClip : "-"));
+
+        return true;
+    }
+
+    // Keeps clip-name matching in one place: idle/walk/run are matched by increasingly
+    // specific keywords so "Walking_Cycle" or "Running_Fast" style names still resolve.
+    // Meshy/Mixamo exported clips often bake the root/hip translation straight onto the
+    // clip's own position curves (sometimes through an extra "Armature" wrapper node, so the
+    // path depth varies per model). Since we drive villager position manually, that baked
+    // translation fights our code every frame and snaps back to the clip's authored offset
+    // whenever the clip loops - this is what causes villagers to visibly "teleport" back
+    // toward their spawn/animation origin mid-walk. Skeletal rigs basically never need real
+    // position animation other than that root motion, so strip EVERY position curve in the
+    // clip (at any depth) rather than trying to guess which bone is "the" root.
+    readonly HashSet<AnimationClip> strippedRootMotionClips = new HashSet<AnimationClip>();
+    void StripBakedRootMotion(AnimationClip clip)
+    {
+        if (clip == null || strippedRootMotionClips.Contains(clip)) return;
+        strippedRootMotionClips.Add(clip);
+#if UNITY_EDITOR
+        var bindings = AnimationUtility.GetCurveBindings(clip);
+        foreach (var b in bindings)
+        {
+            if (b.type != typeof(Transform)) continue;
+            if (b.propertyName != "m_LocalPosition.x" && b.propertyName != "m_LocalPosition.y" && b.propertyName != "m_LocalPosition.z") continue;
+            AnimationUtility.SetEditorCurve(clip, b, null);
+        }
+#endif
+    }
+
+    void ClassifyClip(string rawName, ref string idle, ref string walk, ref string run, ref string first)
+    {
+        string n = rawName.ToLowerInvariant();
+        // Sit/lie/transition/etc. clips need a real trigger (a chair, a bed...) we don't have
+        // yet — never let one of these become the "whatever's first" default standing/walking
+        // pose, or villagers end up floating in a sitting pose with no chair under them.
+        bool special = n.Contains("sit") || n.Contains("lie") || n.Contains("lay") || n.Contains("sleep")
+                     || n.Contains("jump") || n.Contains("wave") || n.Contains("dance") || n.Contains("transition");
+        if (special) return; // never let a sit/lie/etc. clip become idle, walk, run OR the "first" fallback
+        if (first == null) first = rawName;
+        // "Walk_Turn_Left/Right" etc. are turn-IN-PLACE animations, not a forward walk cycle —
+        // picking one as the general walk/idle made villagers visibly spin on the spot instead
+        // of walking, and look like they "teleport" in place whenever the turn loops back to its
+        // start pose. Prefer a plain clip over a turn-variant for the same slot; only fall back
+        // to the turn-variant if nothing else is offered.
+        bool isTurn = n.Contains("turn");
+        if (n.Contains("idle") && (idle == null || (!isTurn && idle.ToLowerInvariant().Contains("turn")))) idle = rawName;
+        if (n.Contains("walk") && (walk == null || (!isTurn && walk.ToLowerInvariant().Contains("turn")))) walk = rawName;
+        if ((n.Contains("run") || n.Contains("jog") || n.Contains("sprint")) && (run == null || (!isTurn && run.ToLowerInvariant().Contains("turn")))) run = rawName;
+    }
+
+    // Gives a villager an actual reason to be walking somewhere, instead of endless random
+    // wandering: mostly they're just out for a stroll, but sometimes they head over to visit
+    // the Pet Shop and hang around there a while before moving on. Running is now rare and
+    // only kicks in on the (uncommon) occasions they're hurrying somewhere specific.
+    void PickNextVillagerGoal(GameObject person, VillagerWander w)
+    {
+        if (w.goal == VillagerGoal.AtShop)
+        {
+            w.goal = VillagerGoal.Stroll;
+            w.target = PickWanderTarget(person.transform.position);
+            w.running = false;
+            w.nextPick = Time.time + UnityEngine.Random.Range(6f, 14f);
+            return;
+        }
+        if (w.goal == VillagerGoal.GoToShop)
+        {
+            // Arrived at the shop — stand around for a while before heading off again.
+            w.goal = VillagerGoal.AtShop;
+            w.target = person.transform.position;
+            w.running = false;
+            w.nextPick = Time.time + UnityEngine.Random.Range(5f, 10f);
+            return;
+        }
+        // Currently strolling. Small chance to set off toward the Pet Shop instead of another
+        // aimless walk; otherwise just pick a new nearby spot to stroll to.
+        if (shop != null && UnityEngine.Random.value < 0.25f)
+        {
+            w.goal = VillagerGoal.GoToShop;
+            Vector3 offset = new Vector3(UnityEngine.Random.Range(-3f, 3f), 0, UnityEngine.Random.Range(1f, 4f));
+            w.target = shopPosition + offset;
+            // "Running late to the shop" is the one semi-legitimate reason to run, and even then rarely.
+            w.running = UnityEngine.Random.value < 0.08f;
+        }
+        else
+        {
+            w.goal = VillagerGoal.Stroll;
+            w.target = PickWanderTarget(person.transform.position);
+            w.running = UnityEngine.Random.value < 0.03f; // a casual stroll is basically never a run
+        }
+        w.nextPick = Time.time + UnityEngine.Random.Range(6f, 14f);
+    }
+
+    // Picks a random nearby spot for a villager to wander toward — clamped to the world
+    // bounds and rejected if it lands in water. Falls back to the shop if unlucky.
+    Vector3 PickWanderTarget(Vector3 from)
+    {
+        for (int attempt = 0; attempt < 6; attempt++)
+        {
+            float ang = UnityEngine.Random.Range(0f, 360f) * Mathf.Deg2Rad;
+            float dist = UnityEngine.Random.Range(6f, 16f);
+            Vector3 candidate = from + new Vector3(Mathf.Sin(ang) * dist, 0, Mathf.Cos(ang) * dist);
+            float half = WorldSize / 2f - 6f;
+            candidate.x = Mathf.Clamp(candidate.x, -half, half);
+            candidate.z = Mathf.Clamp(candidate.z, -half, half);
+            if (!IsWater(candidate.x, candidate.z)) return candidate;
+        }
+        return shopPosition;
+    }
+
+    // Reads the live player character's current rendered height so villagers can be scaled
+    // to match exactly, whatever size the installed MasterPlayer model actually turned out to
+    // be (that model is never auto-scaled on install, unlike villagers/furniture/trees).
+    float GetHeroTargetHeight()
+    {
+        GameObject master = GameObject.Find("PetTown_MasterCharacter");
+        if (master == null) return 3.3f;
+        var renderers = master.GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0) return 3.3f;
+        Bounds b = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++) b.Encapsulate(renderers[i].bounds);
+        return b.size.y > 0.1f ? b.size.y : 3.3f;
+    }
+
+    // Combines the mesh asset's own local bounds (bind pose, not whatever frame the
+    // Animation component happens to be on) so the height reading is stable regardless
+    // of when this runs relative to Unity's render/animation update order.
+    bool MeasureLocalHeight(GameObject instance, out float minY, out float maxY)
+    {
+        bool has=false; minY=0; maxY=0;
+        foreach (var smr in instance.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+        {
+            if (smr.sharedMesh == null) continue;
+            Bounds lb = smr.sharedMesh.bounds;
+            Vector3 c0 = smr.transform.TransformPoint(lb.center - lb.extents);
+            Vector3 c1 = smr.transform.TransformPoint(lb.center + lb.extents);
+            float lo = Mathf.Min(c0.y, c1.y), hi = Mathf.Max(c0.y, c1.y);
+            if (!has) { minY = lo; maxY = hi; has = true; } else { minY = Mathf.Min(minY, lo); maxY = Mathf.Max(maxY, hi); }
+        }
+        foreach (var mf in instance.GetComponentsInChildren<MeshFilter>(true))
+        {
+            if (mf.sharedMesh == null) continue;
+            Bounds lb = mf.sharedMesh.bounds;
+            Vector3 c0 = mf.transform.TransformPoint(lb.center - lb.extents);
+            Vector3 c1 = mf.transform.TransformPoint(lb.center + lb.extents);
+            float lo = Mathf.Min(c0.y, c1.y), hi = Mathf.Max(c0.y, c1.y);
+            if (!has) { minY = lo; maxY = hi; has = true; } else { minY = Mathf.Min(minY, lo); maxY = Mathf.Max(maxY, hi); }
+        }
+        return has;
+    }
+
+    // Excludes TerrainLayer so rolling hills are never mistaken for an obstacle (that was the
+    // "drunk wandering" bug — a forward check kept hitting the ground mesh itself on any slope).
+    static readonly int VillagerBlockMask = ~(1 << TerrainLayer);
+    // A capsule overlap AT THE DESTINATION, not a single forward ray from the start point — this
+    // is what actually catches corners and thin/angled walls that a plain raycast slips past.
+    bool PositionClear(Vector3 p)
+    {
+        Vector3 lo = p + Vector3.up * 0.35f;
+        Vector3 hi = p + Vector3.up * 1.6f;
+        return !Physics.CheckCapsule(lo, hi, 0.4f, VillagerBlockMask);
+    }
+    // Tries the desired direction first, then fans outward (±30°, ±60°, ±90°, ±135°, 180°) and
+    // takes the first one that's actually clear. Sweeps the capsule along the WHOLE probe
+    // distance (CapsuleCast), not just a single sampled endpoint — an endpoint-only check can
+    // miss a corner or thin wall that the capsule would clip through on the way there, which is
+    // what let villagers visibly grind into wall corners.
+    static readonly float[] DirectionFanAngles = { 0f, 30f, -30f, 60f, -60f, 90f, -90f, 135f, -135f, 180f };
+    Vector3 FindClearDirection(Vector3 origin, Vector3 desired, float probeDist)
+    {
+        Vector3 lo = origin + Vector3.up * 0.35f;
+        Vector3 hi = origin + Vector3.up * 1.6f;
+        foreach (float a in DirectionFanAngles)
+        {
+            Vector3 cand = Quaternion.Euler(0, a, 0) * desired;
+            if (cand.sqrMagnitude < 0.0001f) continue;
+            if (!Physics.CapsuleCast(lo, hi, 0.4f, cand.normalized, out RaycastHit hit, probeDist, VillagerBlockMask))
+                return cand;
+        }
+        return Vector3.zero;
+    }
+
+    // The animation itself (walk/run clips Meshy exported) often bakes a bit of forward
+    // translation into the skeleton so the gait looks convincing in isolation. Since our own
+    // Update() loop already moves the logical root transform, that baked motion just adds on
+    // top of it — and snaps back to zero every time the clip loops, which is exactly the
+    // "walks forward, then teleports back" symptom. Re-lock each model to its root every
+    // frame, after animation evaluation, so only our own movement code actually relocates it.
+    void LateUpdate()
+    {
+        foreach (var info in villagerAnimInfo.Values)
+        {
+            if (info != null && info.model != null) info.model.localPosition = Vector3.zero;
+        }
+    }
+    void UpdateVillagerAnim(GameObject person, bool moving, bool running)
+    {
+        VillagerAnim info;
+        if (!villagerAnimInfo.TryGetValue(person, out info) || info == null) return;
+        string target;
+        if (!moving) target = info.idleClip ?? info.walkClip ?? info.runClip;
+        else target = running ? (info.runClip ?? info.walkClip) : (info.walkClip ?? info.runClip);
+        if (string.IsNullOrEmpty(target)) return;
+        if (info.anim != null)
+        {
+            if (!info.anim.IsPlaying(target)) info.anim.CrossFade(target, 0.15f);
+        }
+        else if (info.animator != null)
+        {
+            var state = info.animator.GetCurrentAnimatorStateInfo(0);
+            if (!state.IsName(target)) info.animator.CrossFade(target, 0.15f);
+        }
+    }
+    void Message(string message) {notice=message;noticeTime=Time.time+6f;}
+    void ClearGhost() {if(ghost!=null)Destroy(ghost);ghost=null;}
+    void SetMode(Mode m,int index=0)
+    {
+        mode=m;selected=index;ClearGhost();
+        if(m==Mode.Build || m==Mode.Furniture)
+        {
+            ghost=Part(PrimitiveType.Cube,"PLACEMENT_PREVIEW",Vector3.zero,new Vector3(m==Mode.Furniture?2:8,.1f,m==Mode.Furniture?2:8),Mat(new Color(.3f,.9f,.6f,.7f)));
+            Destroy(ghost.GetComponent<Collider>());
+        }
+    }
+    // v06: landscape desktop and portrait mobile share the same minimal visual language.
+    void DrawDesktopHUD()
+    {
+        InitMobileHUD();
+        float scale=Mathf.Clamp(Mathf.Min(Screen.width/1000f,Screen.height/600f),.65f,1.7f);
+        float w=Screen.width/scale,h=Screen.height/scale;
+        Matrix4x4 previous=GUI.matrix;
+        GUI.matrix=Matrix4x4.Scale(new Vector3(scale,scale,1));
+        Card(new Rect(12,12,258,74),Color.black);
+        InkLabel(new Rect(22,15,240,30),"PET TOWN 3D",mobileTitle,Color.white);
+        InkLabel(new Rect(22,49,244,26),"LV "+shopLevel+"  |  Day "+day+"  |  Fame "+reputation,mobileSmall,Color.white);
+        Card(new Rect(278,12,198,74),Color.black);
+        InkLabel(new Rect(289,16,180,26),"Coins  "+money.ToString("N0"),mobileText,Color.white);
+        InkLabel(new Rect(289,49,180,26),"Residents  "+population,mobileSmall,Color.white);
+        Card(new Rect(12,94,464,60),Color.black);
+        InkLabel(new Rect(22,98,444,24),"PETS  Dog "+dogStock+"  Cat "+catStock+"  Bunny "+rabbitStock,mobileSmall,Color.white);
+        InkLabel(new Rect(22,125,310,24),orderPet>=0?"Order: "+petNames[orderPet]+"  "+Mathf.Max(0,Mathf.CeilToInt(orderDeadline-Time.time))+"s":"Adoptions "+sold+"  |  Waiting",mobileSmall,Color.white);
+        if(orderPet>=0 && FancyButton(new Rect(359,120,105,28),"SERVE",mint))ServeOrder();
+        string[] icons={"adopt","build","decorate","style"};
+        string[] labels={"Explore","Build","Decorate","Style"};
+        Mode[] modes={Mode.Play,Mode.Build,Mode.Furniture,Mode.Customize};
+        for(int i=0;i<4;i++)if(IconButton(new Rect(12+i*62,h-68,56,56),icons[i],labels[i])){SetMode(modes[i]);mobileManagementOpen=false;}
+        float rx=w-69;
+        if(IconButton(new Rect(rx,12,56,56),"shop","SHOP"))mobileManagementOpen=!mobileManagementOpen;
+        if(IconButton(new Rect(rx,74,56,56),"roof","ROOF"))ToggleMobileRoof();
+        if(IconButton(new Rect(rx,136,56,56),"save","SAVE"))SaveGame();
+        if(IconButton(new Rect(rx,198,56,56),"more","MORE"))mobileMenuOpen=!mobileMenuOpen;
+        if(mobileMenuOpen)
+        {
+            Card(new Rect(w-320,263,242,104),Color.black);
+            if(FancyButton(new Rect(w-309,274,220,39),"Reset save",pink)){PlayerPrefs.DeleteKey("PetTown3D_Save");Message("Save removed. Restart Play mode.");}
+            if(FancyButton(new Rect(w-309,319,220,38),"Close",mint))mobileMenuOpen=false;
+        }
+        if(mode==Mode.Build || mode==Mode.Furniture || mode==Mode.Customize || mobileManagementOpen)
+        {
+            float pw=260, px=w-pw-82, py=166;
+            float ph=Mathf.Max(155,h-py-83);
+            Card(new Rect(px,py,pw,ph),Color.black);
+            float inner=pw-34;
+            int count=mobileManagementOpen?7:mode==Mode.Build?types.Length:mode==Mode.Furniture?furniture.Length:6;
+            mobileScroll=GUI.BeginScrollView(new Rect(px+8,py+8,pw-16,ph-16),mobileScroll,new Rect(0,0,inner,45+count*47));
+            InkLabel(new Rect(8,0,inner,32),mobileManagementOpen?"PET SHOP":mode==Mode.Build?"BUILDINGS":mode==Mode.Furniture?"DECORATE":"CHARACTER",mobileText,Color.white);
+            if(mobileManagementOpen)
+            {
+                if(FancyButton(new Rect(8,36,inner-8,40),"2 Puppies  -120",pink))BuyPets(0,120);
+                if(FancyButton(new Rect(8,83,inner-8,40),"2 Kittens  -120",mint))BuyPets(1,120);
+                if(shopLevel>=2 && FancyButton(new Rect(8,130,inner-8,40),"2 Bunnies  -180",lilac))BuyPets(2,180);
+                if(FancyButton(new Rect(8,177,inner-8,40),"Toggle roof",blue))ToggleMobileRoof();
+                if(FancyButton(new Rect(8,224,inner-8,40),"Save",mint))SaveGame();
+                if(FancyButton(new Rect(8,271,inner-8,40),"Close",pink))mobileManagementOpen=false;
+            }
+            else if(mode==Mode.Build) {for(int i=0;i<types.Length;i++)if(FancyButton(new Rect(8,36+i*47,inner-8,40),types[i]+"  "+costs[i],mint))selected=i;}
+            else if(mode==Mode.Furniture) {for(int i=0;i<furniture.Length;i++)if(FancyButton(new Rect(8,36+i*47,inner-8,40),furniture[i],mint))furnitureChoice=i;}
+            else
+            {
+                if(FancyButton(new Rect(8,36,inner-8,40),"Hair  "+hairStyle,pink))hairStyle=(hairStyle+1)%4;
+                if(FancyButton(new Rect(8,83,inner-8,40),"Face  "+faceStyle,mint))faceStyle=(faceStyle+1)%4;
+                if(FancyButton(new Rect(8,130,inner-8,40),"Body  "+bodyStyle,blue))bodyStyle=(bodyStyle+1)%4;
+                if(FancyButton(new Rect(8,177,inner-8,40),"Legs  "+legStyle,lilac))legStyle=(legStyle+1)%4;
+                if(FancyButton(new Rect(8,224,inner-8,40),"Accessory  "+accessory,pink))accessory=(accessory+1)%3;
+                if(FancyButton(new Rect(8,271,inner-8,40),"Apply",mint)){RebuildHero();SaveGame();SetMode(Mode.Play);}
+            }
+            GUI.EndScrollView();
+        }
+        if(Time.time<noticeTime)
+        {
+            Card(new Rect(268,h-59,Mathf.Min(500,w-360),35),Color.black);
+            InkLabel(new Rect(278,h-56,Mathf.Min(480,w-380),29),notice,mobileSmall,Color.white);
+        }
+        GUI.matrix=previous;
+    }
+
+    void OnGUI()
+    {
+        if (Screen.height > Screen.width * 1.15f) DrawMobileHUD(); else DrawDesktopHUD();
+        return;
+        if(titleStyle==null)
+        {
+            titleStyle=new GUIStyle(GUI.skin.label){fontSize=22,fontStyle=FontStyle.Bold};
+            titleStyle.normal.textColor=Color.white;
+            textStyle=new GUIStyle(GUI.skin.label){fontSize=15};textStyle.normal.textColor=Color.white;
+        }
+        GUI.Box(new Rect(8,8,280,mode==Mode.Start?230:460),"PET TOWN 3D  |  PROTOTYPE");
+        GUILayout.BeginArea(new Rect(20,35,260,mode==Mode.Start?195:425));
+        GUILayout.Label("Coins: "+money+"    Residents: "+population,textStyle);
+        GUILayout.Label("Day "+day+"  |  Shop Lv "+shopLevel+"  |  Fame "+reputation,textStyle);
+        GUILayout.Label("Dogs "+dogStock+" / Cats "+catStock+" / Bunnies "+rabbitStock,textStyle);
+        GUILayout.Label("Adoptions: "+sold+"  |  Missed: "+missedOrders,textStyle);
+        if(orderPet>=0) GUILayout.Label("CUSTOMER WANTS: "+petNames[orderPet]+" ("+Mathf.CeilToInt(orderDeadline-Time.time)+"s)",textStyle);
+        if(mode==Mode.Start)
+        {
+            GUILayout.Space(12);GUILayout.Label("Click anywhere on dry land",textStyle);
+            GUILayout.Label("to choose your Pet Shop location.",textStyle);
+            GUILayout.Label("River and hills are part of the map.",textStyle);
+        }
+        else
+        {
+            if(GUILayout.Button("Explore / Move (WASD)")) SetMode(Mode.Play);
+            if(GUILayout.Button("Build town / choose building"))SetMode(Mode.Build);
+            if(GUILayout.Button("Decorate Pet Shop"))SetMode(Mode.Furniture);
+            if(GUILayout.Button("Customize my character"))SetMode(Mode.Customize);
+            if(GUILayout.Button("Order 2 puppies (-120)")) BuyPets(0,120);
+            if(GUILayout.Button("Order 2 kittens (-120)")) BuyPets(1,120);
+            if(shopLevel>=2 && GUILayout.Button("Order 2 bunnies (-180)")) BuyPets(2,180);
+            if(orderPet>=0 && GUILayout.Button("SERVE CUSTOMER [E]")) ServeOrder();
+            if(reputation>=shopLevel*10 && GUILayout.Button("Upgrade Shop Level (-"+(shopLevel*400)+")"))
+            {if(money>=shopLevel*400){money-=shopLevel*400;shopLevel++;Message("Shop upgraded! Bunny stock unlocks at level 2.");SaveGame();}}
+            if(GUILayout.Button("Toggle roof view")){showRoofs=!showRoofs;foreach(var b in buildings) if(b!=null)foreach(var r in b.GetComponentsInChildren<Transform>(true))if(r.name=="Toggle_Roof")r.gameObject.SetActive(showRoofs);}
+            if(GUILayout.Button("Save game (F5)"))SaveGame();
+            if(GUILayout.Button("Reset save")){PlayerPrefs.DeleteKey("PetTown3D_Save");Message("Save removed. Restart Play mode.");}
+        }
+        GUILayout.EndArea();
+        if(mode==Mode.Build)
+        {
+            GUI.Box(new Rect(Screen.width-235,8,225,350),"BUILDINGS");
+            GUILayout.BeginArea(new Rect(Screen.width-225,38,205,310));
+            for(int i=0;i<types.Length;i++){int k=i;if(GUILayout.Button(types[i]+"  "+costs[i]))selected=k;}
+            GUILayout.Label("Selected: "+types[selected],textStyle);GUILayout.EndArea();
+        }
+        if(mode==Mode.Furniture)
+        {
+            GUI.Box(new Rect(Screen.width-230,8,220,275),"FURNITURE (50 coins)");
+            GUILayout.BeginArea(new Rect(Screen.width-220,38,200,230));
+            for(int i=0;i<furniture.Length;i++){int k=i;if(GUILayout.Button(furniture[i]))furnitureChoice=k;}
+            GUILayout.Label("Selected: "+furniture[furnitureChoice],textStyle);GUILayout.EndArea();
+        }
+        if(mode==Mode.Customize)
+        {
+            GUI.Box(new Rect(Screen.width-245,8,235,275),"PLAYER CUSTOMIZATION");
+            GUILayout.BeginArea(new Rect(Screen.width-235,38,215,230));
+            if(GUILayout.Button("Hair style: "+hairStyle))hairStyle=(hairStyle+1)%4;
+            if(GUILayout.Button("Face style: "+faceStyle))faceStyle=(faceStyle+1)%4;
+            if(GUILayout.Button("Body style: "+bodyStyle))bodyStyle=(bodyStyle+1)%4;
+            if(GUILayout.Button("Leg style: "+legStyle))legStyle=(legStyle+1)%4;
+            if(GUILayout.Button("Accessory: "+accessory))accessory=(accessory+1)%3;
+            if(GUILayout.Button("Apply character")){RebuildHero();SaveGame();SetMode(Mode.Play);}
+            GUILayout.EndArea();
+        }
+        GUI.Box(new Rect(Screen.width/2-265,Screen.height-70,530,62),"");
+        GUI.Label(new Rect(Screen.width/2-250,Screen.height-64,510,25),"WASD move | Right drag rotate | Q/E 45 deg | R reset | Wheel zoom | F5 save",textStyle);
+        if(Time.time<noticeTime)GUI.Label(new Rect(Screen.width/2-250,Screen.height-38,510,22),notice,textStyle);
+        GUI.Label(new Rect(Screen.width-330,Screen.height-35,320,25),"Far southeast: DARK PET SHOP (preview)",textStyle);
+    }
+
+    // v13: transparent PNG HUD sprites loaded from Resources/HUD; original gameplay preserved.
+    GUIStyle mobileTitle, mobileText, mobileButton, mobileSmall, mobileCenter;
+    Texture2D mobileWhite;
+    readonly System.Collections.Generic.Dictionary<string,Texture2D> hudSprites = new System.Collections.Generic.Dictionary<string,Texture2D>();
+    Texture2D HudSprite(string name) { Texture2D t; if (!hudSprites.TryGetValue(name,out t)) { t=Resources.Load<Texture2D>("HUD/"+name); hudSprites[name]=t; } return t; }
+    void HudImage(Rect r,string name) { var t=HudSprite(name); if(t!=null)GUI.DrawTexture(r,t,ScaleMode.StretchToFill,true); }
+    Color cream = Color.white, cocoa = Color.black;
+    Color mint = Color.white, pink = Color.white;
+    Color blue = Color.white, amber = Color.white;
+    Color lilac = Color.white;
+    Vector2 mobileScroll;
+    bool mobileMenuOpen;
+    bool mobileManagementOpen;
+    Texture2D uiFontTexture;
+    Font uiFont;
+    void InitMobileHUD()
+    {
+        if(mobileTitle!=null)return;
+        uiFont=Resources.Load<Font>("Fonts/NanumSquareB");
+        mobileTitle=new GUIStyle(GUI.skin.label){fontSize=21,fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleLeft,font=uiFont};
+        mobileText=new GUIStyle(GUI.skin.label){fontSize=16,fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleLeft,wordWrap=true,font=uiFont};
+        mobileSmall=new GUIStyle(mobileText){fontSize=13};
+        mobileCenter=new GUIStyle(mobileText){alignment=TextAnchor.MiddleCenter};
+        mobileButton=new GUIStyle(mobileText){fontSize=15,alignment=TextAnchor.MiddleCenter};
+    }
+    void FlatRect(Rect r, Color fill, float alpha=.30f)
+    {
+        Color prev=GUI.color;
+        GUI.color=new Color(fill.r,fill.g,fill.b,alpha);
+        GUI.DrawTexture(r,Texture2D.whiteTexture);
+        GUI.color=Color.black;
+        GUI.DrawTexture(new Rect(r.x,r.y,r.width,2),Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(r.x,r.yMax-2,r.width,2),Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(r.x,r.y,2,r.height),Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(r.xMax-2,r.y,2,r.height),Texture2D.whiteTexture);
+        GUI.color=prev;
+    }
+    void Card(Rect r,Color fill) { FlatRect(r,Color.black,.30f); }
+    void InkLabel(Rect r,string text,GUIStyle style,Color color)
+    {
+        Color old=style.normal.textColor;style.normal.textColor=color;
+        GUI.Label(r,text,style);style.normal.textColor=old;
+    }
+    bool FancyButton(Rect r,string label,Color color,bool active=false)
+    {
+        FlatRect(r,Color.black,.30f);
+        InkLabel(new Rect(r.x+3,r.y+2,r.width-6,r.height-4),label,mobileButton,Color.white);
+        return GUI.Button(r,GUIContent.none,GUIStyle.none);
+    }
+    bool IconButton(Rect r,string sprite,string label)
+    {
+        // No square backdrop or border. Center caption beneath the artwork.
+        var t=HudSprite(sprite);
+        float iconSize=Mathf.Min(r.width-8f,r.height-19f);
+        Rect art=new Rect(r.x+(r.width-iconSize)*.5f,r.y+1f,iconSize,iconSize);
+        if(t!=null)
+        {
+            Color old=GUI.color;
+            GUI.color=Color.white;
+            GUI.DrawTexture(art,t,ScaleMode.ScaleToFit,true);
+            GUI.color=old;
+        }
+        GUIStyle centered=new GUIStyle(mobileSmall){alignment=TextAnchor.MiddleCenter,clipping=TextClipping.Clip};
+        InkLabel(new Rect(r.x,r.y+r.height-17f,r.width,17f),label,centered,Color.white);
+        return GUI.Button(r,GUIContent.none,GUIStyle.none);
+    }
+    void DrawMobileHUD()
+    {
+        InitMobileHUD();
+        float scale=Mathf.Min(Screen.width/390f,Screen.height/780f);
+        float w=Screen.width/scale,h=Screen.height/scale;
+        Matrix4x4 previous=GUI.matrix;
+        GUI.matrix=Matrix4x4.Scale(new Vector3(scale,scale,1));
+        // Top status: small, independent capsules leave the world visible.
+        Card(new Rect(9,10,w*.55f,66),new Color(.44f,.68f,.39f,.96f));
+        InkLabel(new Rect(22,14,w*.5f,25),"PET TOWN 3D",mobileTitle,Color.white);
+        InkLabel(new Rect(22,41,w*.5f,26),"LV "+shopLevel+"  |  Day "+day+"  |  Fame "+reputation,mobileSmall,cream);
+        Card(new Rect(w*.59f,10,w*.39f,42),cocoa);
+        InkLabel(new Rect(w*.60f,13,w*.36f,34),"●  "+money.ToString("N0"),mobileCenter,cream);
+        Card(new Rect(w*.59f,54,w*.39f,36),new Color(.37f,.23f,.16f));
+        InkLabel(new Rect(w*.60f,57,w*.36f,29),"Residents  "+population,mobileCenter,cream);
+        if(mode==Mode.Start)
+        {
+            Card(new Rect(12,105,w-24,73),new Color(.96f,.80f,.66f));
+            InkLabel(new Rect(24,110,w-48,64),"Tap dry land to place your first Pet Shop.",mobileText,cocoa);
+        }
+        else
+        {
+            Card(new Rect(10,102,w-20,55),new Color(.40f,.67f,.40f,.97f));
+            InkLabel(new Rect(22,105,w-44,22),"PETS   Dog "+dogStock+"   Cat "+catStock+"   Bunny "+rabbitStock,mobileSmall,Color.white);
+            if(orderPet>=0)
+            {
+                InkLabel(new Rect(22,128,w-139,23),"Order: "+petNames[orderPet]+"  "+Mathf.Max(0,Mathf.CeilToInt(orderDeadline-Time.time))+"s",mobileSmall,cream);
+                if(FancyButton(new Rect(w-120,124,102,29),"SERVE",amber))ServeOrder();
+            }
+            else InkLabel(new Rect(22,127,w-44,23),"Adoptions  "+sold+"   |   Waiting for customer",mobileSmall,cream);
+            // Right-side utility buttons. Each is a genuine gameplay action.
+            float rx=w-66;
+            if(IconButton(new Rect(rx,190,57,57),"shop","SHOP"))mobileManagementOpen=!mobileManagementOpen;
+            if(IconButton(new Rect(rx,250,57,57),"roof","ROOF"))ToggleMobileRoof();
+            if(IconButton(new Rect(rx,310,57,57),"save","SAVE"))SaveGame();
+            if(IconButton(new Rect(rx,370,57,57),"more","MORE"))mobileMenuOpen=!mobileMenuOpen;
+            if(mobileMenuOpen)
+            {
+                Card(new Rect(12,h-231,w-24,103),new Color(.96f,.89f,.76f));
+                if(FancyButton(new Rect(22,h-221,(w-52)/2,40),"Reset save",pink)) {PlayerPrefs.DeleteKey("PetTown3D_Save");Message("Save removed. Restart Play mode.");}
+                if(FancyButton(new Rect(w/2+4,h-221,(w-52)/2,40),"Close",mint))mobileMenuOpen=false;
+                InkLabel(new Rect(22,h-176,w-44,33),"Camera: drag to rotate / pinch to zoom",mobileSmall,cocoa);
+            }
+            // Compact bottom navigation.
+            float bw=49f; // Four small buttons clustered in the bottom-left
+            string[] labels={"Explore","Build","Decorate","Style"};
+            string[] icons={"adopt","build","decorate","style"};
+            Mode[] modes={Mode.Play,Mode.Build,Mode.Furniture,Mode.Customize};
+            Color[] colors={mint,blue,amber,pink};
+            for(int i=0;i<4;i++)
+            {
+                Rect r=new Rect(8+i*(bw+4),h-59,bw,49);
+                if(IconButton(r,icons[i],labels[i])){SetMode(modes[i]);mobileManagementOpen=false;}
+            }
+            // Open drawers only when needed; never cover the playfield by default.
+            if(mode==Mode.Build || mode==Mode.Furniture || mode==Mode.Customize || mobileManagementOpen)
+            {
+                float top=170, bottom=h-92, panelH=Mathf.Min(405,bottom-top);
+                Rect panel=new Rect(10,top,w-80,panelH);
+                Card(panel,new Color(.99f,.94f,.83f,.97f));
+                float inner=panel.width-26;
+                int count=mode==Mode.Build?types.Length:mode==Mode.Furniture?furniture.Length:mode==Mode.Customize?6:7;
+                if(mobileManagementOpen)count=7;
+                mobileScroll=GUI.BeginScrollView(new Rect(panel.x+9,panel.y+9,panel.width-18,panel.height-18),mobileScroll,new Rect(0,0,inner,44+count*51));
+                bool manage=mobileManagementOpen;
+                InkLabel(new Rect(8,0,inner,32),manage?"PET SHOP":mode==Mode.Build?"BUILDINGS":mode==Mode.Furniture?"DECORATE":"CHARACTER",mobileText,cocoa);
+                if(!manage && mode==Mode.Build)
+                {
+                    for(int i=0;i<types.Length;i++)if(FancyButton(new Rect(8,36+i*51,inner-6,44),types[i]+"  ·  "+costs[i],i==selected?mint:cream))selected=i;
+                }
+                else if(!manage && mode==Mode.Furniture)
+                {
+                    for(int i=0;i<furniture.Length;i++)if(FancyButton(new Rect(8,36+i*51,inner-6,44),furniture[i]+"  ·  50",i==furnitureChoice?mint:cream))furnitureChoice=i;
+                }
+                else if(!manage && mode==Mode.Customize)
+                {
+                    if(FancyButton(new Rect(8,36,inner-6,44),"Hair  "+hairStyle,pink))hairStyle=(hairStyle+1)%4;
+                    if(FancyButton(new Rect(8,87,inner-6,44),"Face  "+faceStyle,cream))faceStyle=(faceStyle+1)%4;
+                    if(FancyButton(new Rect(8,138,inner-6,44),"Body  "+bodyStyle,blue))bodyStyle=(bodyStyle+1)%4;
+                    if(FancyButton(new Rect(8,189,inner-6,44),"Legs  "+legStyle,lilac))legStyle=(legStyle+1)%4;
+                    if(FancyButton(new Rect(8,240,inner-6,44),"Accessory  "+accessory,pink))accessory=(accessory+1)%3;
+                    if(FancyButton(new Rect(8,291,inner-6,44),"Apply",mint)){RebuildHero();SaveGame();SetMode(Mode.Play);}
+                }
+                else
+                {
+                    if(FancyButton(new Rect(8,36,inner-6,44),"2 Puppies  ·  120",pink))BuyPets(0,120);
+                    if(FancyButton(new Rect(8,87,inner-6,44),"2 Kittens  ·  120",cream))BuyPets(1,120);
+                    if(shopLevel>=2 && FancyButton(new Rect(8,138,inner-6,44),"2 Bunnies  ·  180",lilac))BuyPets(2,180);
+                    if(reputation>=shopLevel*10 && FancyButton(new Rect(8,189,inner-6,44),"Upgrade  ·  "+shopLevel*400,mint))
+                    {if(money>=shopLevel*400){money-=shopLevel*400;shopLevel++;Message("Shop upgraded!");SaveGame();}}
+                    if(FancyButton(new Rect(8,240,inner-6,44),"Toggle roof",blue))ToggleMobileRoof();
+                    if(FancyButton(new Rect(8,291,inner-6,44),"Save",mint))SaveGame();
+                    if(FancyButton(new Rect(8,342,inner-6,44),"Close",amber))mobileManagementOpen=false;
+                }
+                GUI.EndScrollView();
+            }
+        }
+        if(Time.time<noticeTime)
+        {
+            Card(new Rect(45,h-118,w-90,31),cocoa);
+            InkLabel(new Rect(53,h-116,w-106,26),notice,mobileSmall,cream);
+        }
+        GUI.matrix=previous;
+    }
+    void ToggleMobileRoof()
+    {
+        showRoofs=!showRoofs;
+        foreach(var b in buildings)if(b!=null)foreach(var r in b.GetComponentsInChildren<Transform>(true))if(r.name=="Toggle_Roof")r.gameObject.SetActive(showRoofs);
+    }
+
+
+    void BuyPets(int pet,int price)
+    {
+        if(money<price){Message("Not enough coins to order pets");return;}
+        money-=price;
+        if(pet==0)dogStock+=2;else if(pet==1)catStock+=2;else rabbitStock+=2;
+        inventory=dogStock+catStock+rabbitStock;
+        Message("Two "+petNames[pet]+" pets arrived!");SaveGame();
+    }
+    void StartOrder()
+    {
+        if(shop==null)return;
+        orderTimer=0;orderPet=UnityEngine.Random.Range(0,shopLevel>=2?3:2);
+        orderDeadline=Time.time+42f;
+        Vector3 p=shopPosition+new Vector3(0,0,-7);
+        waitingCustomer=new GameObject("WAITING_CUSTOMER_REPLACEABLE");
+        waitingCustomer.transform.position=new Vector3(p.x,Ground(p.x,p.z),p.z);
+        Part(PrimitiveType.Capsule,"Body",waitingCustomer.transform.position+Vector3.up*1.2f,new Vector3(.75f,1.3f,.7f),Mat(new Color(.84f,.5f,.78f)),waitingCustomer.transform);
+        Part(PrimitiveType.Sphere,"Head",waitingCustomer.transform.position+Vector3.up*2.5f,Vector3.one,skin,waitingCustomer.transform);
+        Message("Customer arrived! Wants a "+petNames[orderPet]+". Press E or SERVE.");
+    }
+    void ServeOrder()
+    {
+        if(orderPet<0)return;
+        int count=orderPet==0?dogStock:orderPet==1?catStock:rabbitStock;
+        if(count<=0){Message("Out of "+petNames[orderPet]+" stock. Order more!");return;}
+        if(orderPet==0)dogStock--;else if(orderPet==1)catStock--;else rabbitStock--;
+        inventory=dogStock+catStock+rabbitStock;
+        int income=(orderPet==2?330:240)+Mathf.Min(150,shopLevel*20)+Mathf.Min(100,population*2);
+        money+=income;sold++;completedOrders++;reputation+=2;
+        Message("Adoption successful! +"+income+" coins, +2 fame");
+        EndOrder();SaveGame();
+    }
+    void FailOrder()
+    {
+        missedOrders++;reputation=Mathf.Max(0,reputation-1);
+        Message("Customer left without a pet. -1 fame");EndOrder();SaveGame();
+    }
+    void EndOrder()
+    {
+        orderPet=-1;orderTimer=0;
+        if(waitingCustomer!=null)Destroy(waitingCustomer);
+        waitingCustomer=null;
+    }
+    // Real pet models live in Resources/pets/<name>.glb. Add more paths here as more are
+    // made (dog_2, cat_1, ...) — assigned round-robin across the 4 shop display slots, and
+    // any slot beyond what's been added yet falls back to the simple placeholder shape.
+    static readonly string[] PetResources = { "pets/dog_1" };
+    // One live pet (not four) that actually wanders a small patch of the Pet Shop floor and
+    // plays its real walk/idle animation, instead of four static display statues.
+    GameObject petInstance; VillagerAnim petAnim; Vector3 petHome, petWanderTarget; float petNextPick;
+    void CreatePetDisplays()
+    {
+        if(shop==null)return;
+        Vector3 p=shopPosition+new Vector3(-2.5f,0,3);
+        GameObject pet=new GameObject("PET_PLACEHOLDER_REPLACEABLE");pet.transform.position=p;
+        Part(PrimitiveType.Cube,"Pet_Bed",p+Vector3.up*.15f,new Vector3(1.8f,.3f,1.8f),wall,pet.transform);
+        float bedTopY=p.y+.3f; float targetHeightPet=.75f;
+        petHome=new Vector3(p.x,bedTopY,p.z); petWanderTarget=petHome; petNextPick=Time.time+UnityEngine.Random.Range(2f,4f);
+        GameObject prefab = PetResources.Length>0 ? Resources.Load<GameObject>(PetResources[0]) : null;
+        if(prefab!=null)
+        {
+            GameObject instance=Instantiate(prefab,pet.transform);
+            instance.name="PET_MODEL_REPLACEABLE";
+            instance.transform.position=p;
+            instance.transform.rotation=Quaternion.Euler(0,UnityEngine.Random.Range(0f,360f),0);
+            instance.transform.localScale=Vector3.one;
+            MarkNavMeshIgnore(pet);
+            foreach (var c in instance.GetComponentsInChildren<Collider>()) Destroy(c);
+            petInstance=instance;
+            // Every same-frame measurement attempt (sharedMesh bounds, local bounds,
+            // Renderer.bounds) gave inconsistent numbers for this model — Unity hasn't run
+            // its first skinning/bounds update pass yet on the same frame as Instantiate(),
+            // so nothing read right then is trustworthy. The reliable fix for this exact
+            // class of bug is to wait one frame (by which point Unity has actually updated
+            // the renderer) and THEN measure Renderer.bounds in world space.
+            StartCoroutine(FitModelNextFrame(instance,bedTopY,targetHeightPet));
+            VillagerAnim animInfo;
+            if (SetupPetAnimation(instance, out animInfo)) petAnim = animInfo;
+            return;
+        }
+        Part(PrimitiveType.Sphere,"Body",p+Vector3.up*.65f,new Vector3(.9f,.65f,1.2f),roofMat,pet.transform);
+        Part(PrimitiveType.Sphere,"Head",p+new Vector3(0,1,-.5f),new Vector3(.8f,.7f,.7f),roofMat,pet.transform);
+    }
+    // Same idle/walk clip resolution SpawnVillagerModel uses (legacy Animation, Animator with a
+    // wired controller, or raw sub-asset clips glTFast left unwired) kept separate so villager
+    // behavior is never risked by pet-specific changes.
+    bool SetupPetAnimation(GameObject instance, out VillagerAnim animInfo)
+    {
+        animInfo = null;
+        var legacy = instance.GetComponentInChildren<Animation>(true);
+        var animator = instance.GetComponentInChildren<Animator>(true);
+        string idleName=null, walkName=null, runName=null, firstName=null;
+        if (legacy != null)
+        {
+            foreach (AnimationState st in legacy)
+            {
+                st.wrapMode = WrapMode.Loop;
+                if (st.clip != null) StripBakedRootMotion(st.clip);
+                ClassifyClip(st.name, ref idleName, ref walkName, ref runName, ref firstName);
+            }
+            if (walkName == null) walkName = runName;
+            if (idleName == null) idleName = walkName ?? firstName;
+            if (idleName != null)
+            {
+                legacy.wrapMode = WrapMode.Loop; legacy.Play(idleName);
+                animInfo = new VillagerAnim { anim = legacy, idleClip = idleName, walkClip = walkName ?? idleName, runClip = runName ?? walkName ?? idleName, model = instance.transform };
+                if (animator != null) animator.enabled = false;
+                return true;
+            }
+        }
+        if (animator != null && animator.runtimeAnimatorController != null)
+        {
+            var clips = animator.runtimeAnimatorController.animationClips;
+            idleName = walkName = runName = firstName = null;
+            if (clips != null) foreach (var clip in clips) if (clip != null) { StripBakedRootMotion(clip); ClassifyClip(clip.name, ref idleName, ref walkName, ref runName, ref firstName); }
+            if (walkName == null) walkName = runName;
+            if (idleName == null) idleName = walkName ?? firstName;
+            if (idleName != null)
+            {
+                animator.applyRootMotion=false; animator.enabled=true; animator.speed=1f; animator.Play(idleName,0,0f);
+                animInfo = new VillagerAnim { animator = animator, idleClip = idleName, walkClip = walkName ?? idleName, runClip = runName ?? walkName ?? idleName, model = instance.transform };
+                return true;
+            }
+        }
+        AnimationClip[] allClips = PetResources.Length>0 ? Resources.LoadAll<AnimationClip>(PetResources[0]) : null;
+        if (allClips != null && allClips.Length > 0)
+        {
+            var legacyPlayer = instance.GetComponent<Animation>();
+            if (legacyPlayer == null) legacyPlayer = instance.AddComponent<Animation>();
+            idleName = walkName = runName = firstName = null;
+            foreach (var clip in allClips)
+            {
+                if (clip == null) continue;
+                StripBakedRootMotion(clip); clip.legacy = true;
+                legacyPlayer.AddClip(clip, clip.name);
+                var state = legacyPlayer[clip.name];
+                if (state != null) state.wrapMode = WrapMode.Loop;
+                ClassifyClip(clip.name, ref idleName, ref walkName, ref runName, ref firstName);
+            }
+            if (walkName == null) walkName = runName;
+            if (idleName == null) idleName = walkName ?? firstName;
+            if (idleName != null)
+            {
+                legacyPlayer.wrapMode = WrapMode.Loop; legacyPlayer.Play(idleName);
+                animInfo = new VillagerAnim { anim = legacyPlayer, idleClip = idleName, walkClip = walkName ?? idleName, runClip = runName ?? walkName ?? idleName, model = instance.transform };
+                return true;
+            }
+        }
+        return false;
+    }
+    // Moves the pet around a small patch of floor near its bed and drives its walk/idle
+    // animation. Kept out of the villager wander system entirely (no NavMeshAgent, no shared
+    // dictionaries) so it can never wander out of the shop and never risks villager behavior.
+    void UpdatePet(float dt)
+    {
+        if (petInstance == null) return;
+        Vector3 cur = petInstance.transform.position;
+        if (Time.time > petNextPick || Vector3.Distance(cur, petWanderTarget) < 0.3f)
+        {
+            Vector2 off = UnityEngine.Random.insideUnitCircle * 1.8f;
+            petWanderTarget = petHome + new Vector3(off.x, 0, off.y);
+            petNextPick = Time.time + UnityEngine.Random.Range(3f, 6f);
+        }
+        bool moving = Vector3.Distance(cur, petWanderTarget) > 0.25f;
+        if (moving)
+        {
+            Vector3 next = Vector3.MoveTowards(cur, petWanderTarget, dt * 0.9f);
+            petInstance.transform.position = next;
+            Vector3 look = petWanderTarget - cur; look.y = 0;
+            if (look.sqrMagnitude > 0.0001f)
+                petInstance.transform.rotation = Quaternion.Slerp(petInstance.transform.rotation, Quaternion.LookRotation(look), dt * 5f);
+        }
+        if (petAnim != null)
+        {
+            string target = moving ? (petAnim.walkClip ?? petAnim.idleClip) : petAnim.idleClip;
+            if (!string.IsNullOrEmpty(target))
+            {
+                if (petAnim.anim != null) { if (!petAnim.anim.IsPlaying(target)) petAnim.anim.CrossFade(target, 0.15f); }
+                else if (petAnim.animator != null) { var st = petAnim.animator.GetCurrentAnimatorStateInfo(0); if (!st.IsName(target)) petAnim.animator.CrossFade(target, 0.15f); }
+            }
+        }
+    }
+
+    // Waits one frame after Instantiate() before measuring Renderer.bounds — by then Unity
+    // has actually run its skinning/bounds update, so this reads the model's TRUE on-screen
+    // size instead of a same-frame value that kept coming out wildly wrong (both far too small
+    // and, when blindly trusted and corrected for, far too large).
+    IEnumerator FitPetModelNextFrame(GameObject instance, float bedTopY, float targetHeight, int slotIndex)
+    {
+        yield return null;
+        if (instance == null) yield break;
+        var renderers = instance.GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0) yield break;
+        Bounds b = renderers[0].bounds;
+        for (int r = 1; r < renderers.Length; r++) b.Encapsulate(renderers[r].bounds);
+        if (b.size.y <= 0.0001f)
+        {
+            Debug.LogWarning("Pet Town 3D pet display " + slotIndex + ": still no usable bounds one frame later (size.y=" + b.size.y + "), leaving at native scale.");
+            yield break;
+        }
+        float feetWorldY = b.min.y;
+        float scale = Mathf.Clamp(targetHeight / b.size.y, .001f, 2000f);
+        instance.transform.localScale = Vector3.one * scale;
+        // Re-measure after scaling — scaling the transform doesn't retroactively change the
+        // bounds we already read, so recompute from the renderers again post-scale for an
+        // exact fit instead of assuming the pre-scale ratio carries over perfectly.
+        renderers = instance.GetComponentsInChildren<Renderer>();
+        b = renderers[0].bounds;
+        for (int r = 1; r < renderers.Length; r++) b.Encapsulate(renderers[r].bounds);
+        instance.transform.position += Vector3.up * (bedTopY - b.min.y);
+        Debug.Log("Pet Town 3D pet display " + slotIndex + ": next-frame scale=" + scale + " finalHeight=" + b.size.y + " finalPos=" + instance.transform.position);
+    }
+    // Generic version of the fitting coroutine above — waits one frame so Renderer.bounds is
+    // trustworthy, then uniformly scales to targetHeight and drops the model so its lowest
+    // point sits exactly at groundY. Reused for anything instantiated from a prefab at runtime
+    // that previously measured bounds on the same frame as Instantiate() (rocks, fences,
+    // gates, houses, furniture) — same-frame bounds are the exact bug that made the pet and
+    // furniture models randomly come out invisible-tiny or screen-filling-huge.
+    IEnumerator FitModelNextFrame(GameObject instance, float groundY, float targetHeight)
+    {
+        yield return null;
+        if (instance == null) yield break;
+        var renderers = instance.GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0) yield break;
+        Bounds b = renderers[0].bounds;
+        for (int r = 1; r < renderers.Length; r++) b.Encapsulate(renderers[r].bounds);
+        if (b.size.y <= 0.0001f) yield break;
+        float scale = Mathf.Clamp(targetHeight / b.size.y, .001f, 2000f);
+        instance.transform.localScale = Vector3.one * scale;
+        renderers = instance.GetComponentsInChildren<Renderer>();
+        b = renderers[0].bounds;
+        for (int r = 1; r < renderers.Length; r++) b.Encapsulate(renderers[r].bounds);
+        instance.transform.position += Vector3.up * (groundY - b.min.y);
+    }
+    [Serializable] class SaveData
+    {
+        public int coins,population,sold,inventory,hair,face,body,legs,acc,rep,level,day,dogs,cats,bunnies,done,missed;
+        public float shopX=999,shopZ;
+        public List<int> types=new List<int>();
+        public List<float> x=new List<float>(),z=new List<float>();
+    }
+    void SaveGame()
+    {
+        SaveData s=new SaveData{coins=money,population=population,sold=sold,inventory=inventory,
+            hair=hairStyle,face=faceStyle,body=bodyStyle,legs=legStyle,acc=accessory,
+            rep=reputation,level=shopLevel,day=day,dogs=dogStock,cats=catStock,bunnies=rabbitStock,done=completedOrders,missed=missedOrders,
+            shopX=shop==null?999:shopPosition.x,shopZ=shopPosition.z};
+        foreach(var b in buildings)
+        {
+            if(b==null||b==shop)continue;
+            string n=b.name;for(int i=0;i<types.Length;i++)if(n.StartsWith(types[i].Replace(" ","_")))
+            {s.types.Add(i);s.x.Add(b.transform.position.x);s.z.Add(b.transform.position.z);break;}
+        }
+        PlayerPrefs.SetString("PetTown3D_Save",JsonUtility.ToJson(s));PlayerPrefs.Save();Message("Game saved");
+    }
+    void LoadGame()
+    {
+        string json=PlayerPrefs.GetString("PetTown3D_Save","");
+        if(string.IsNullOrEmpty(json))return;
+        try
+        {
+            var s=JsonUtility.FromJson<SaveData>(json);
+            money=s.coins;population=s.population;sold=s.sold;inventory=s.inventory;
+            hairStyle=s.hair;faceStyle=s.face;bodyStyle=s.body;legStyle=s.legs;accessory=s.acc;
+            reputation=s.rep;shopLevel=Mathf.Max(1,s.level);day=Mathf.Max(1,s.day);dogStock=s.dogs;catStock=s.cats;rabbitStock=s.bunnies;completedOrders=s.done;missedOrders=s.missed;
+            if(s.shopX!=999)
+            {
+                Vector3 p=new Vector3(s.shopX,Ground(s.shopX,s.shopZ),s.shopZ);
+                CreateBuilding(0,p,false);CreateHero(p+new Vector3(8,0,8));CreatePetDisplays();
+            }
+            var pendingVillagerSpots=new List<Vector3>();
+            for(int i=0;i<s.types.Count;i++)
+            {
+                Vector3 p=new Vector3(s.x[i],Ground(s.x[i],s.z[i]),s.z[i]);
+                CreateBuilding(s.types[i],p,false);
+                if(s.types[i]!=8) BuildPathTo(shopPosition,p);
+                if(s.types[i]==2){pendingVillagerSpots.Add(p+new Vector3(5,0,5));pendingVillagerSpots.Add(p+new Vector3(-5,0,-5));}
+            }
+            RebakeNavMesh();
+            foreach(var spot in pendingVillagerSpots) SpawnVillager(spot);
+            Message("Saved town loaded");
+        }catch(Exception e){Debug.LogWarning("Save could not be loaded: "+e.Message);}
+    }
+}

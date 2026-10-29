@@ -1,0 +1,8 @@
+park rotation 0 slot 0:True
+park rotation 0 slot 1:True
+park rotation 0 slot 2:True
+park rotation 0 slot 3:True
+park rotation 90 slot 0:True
+park rotation 90 slot 1:True
+park rotation 90 slot 2:True
+park rotation 90 slot 3:True

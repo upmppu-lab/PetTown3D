@@ -1,0 +1,13 @@
+{
+  "PetTown3D_CharacterTest.unity": true,
+  "PetTownPlayerControls.cs": true,
+  "PetTownGame.cs": true,
+  "playerSlotExactMatch": true,
+  "playing": false,
+  "sceneDirty": false,
+  "qaObjects": 0,
+  "consoleErrors": 0,
+  "parkPathVertices": 28,
+  "lakePathVertices": 104,
+  "pathRenderersPerLot": 1
+}

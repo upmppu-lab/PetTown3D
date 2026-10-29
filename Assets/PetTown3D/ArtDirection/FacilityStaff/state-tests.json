@@ -1,0 +1,17 @@
+{
+  "chef_level_gate": true,
+  "chef_hiring": true,
+  "vet_level_gate": true,
+  "vet_hiring": true,
+  "specialist_payroll": true,
+  "legacy_business_stays_manual": true,
+  "legacy_employee_stays_at_shop": true,
+  "arrival_role_pause_wage_gates": true,
+  "one_supply_per_service": true,
+  "both_patient_and_worker_required": true,
+  "saved_work_pauses_until_reclaimed": true,
+  "manual_takeover_keeps_progress_and_stock": true,
+  "complete_cafe_and_clinic_flow": true,
+  "one_receipt_payment_activity_each": true,
+  "specialist_employee_roundtrip": true
+}

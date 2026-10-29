@@ -1,0 +1,11 @@
+--- before/PetTownFacilityState.Recipes.cs
++++ after/PetTownFacilityState.Recipes.cs
+@@ -20,7 +20,7 @@
+     public int AvailableCafe(int menu)=>PetTownCafeRecipes.Valid(menu)?Mathf.Max(0,CafeStock(menu)-visits.FindAll(v=>v.kind==3&&v.cafeMenu==menu&&!v.suppliesUsed&&!v.paid).Count):0;
+     public int AvailableFor(PetTownFacilityBusiness b)=>b==null?0:b.kind==3?AvailableCafe(b.cafeMenu):AvailableSupplies(b.kind);
+     public int VisitStock(PetTownFacilityVisit v)=>v==null?0:v.kind==3?CafeStock(v.cafeMenu):Stock(v.kind);
+-    public static int VisitFee(PetTownFacilityVisit v)=>v.kind==3?PetTownCafeRecipes.Price(v.cafeMenu):Fee(v.kind);
++    public static int VisitFee(PetTownFacilityVisit v)=>v.kind==3?PetTownCafeRecipes.Price(v.cafeMenu):PetTownClinic.Fee(v.clinicService);
+     public bool SelectCafeMenu(PetTownFacilityBusiness business,int menu)
+     {
+         if(business==null||business.kind!=3||!businesses.Contains(business)||!PetTownCafeRecipes.Valid(menu))return false;

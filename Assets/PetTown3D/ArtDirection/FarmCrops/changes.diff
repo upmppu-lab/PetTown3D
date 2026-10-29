@@ -1,0 +1,323 @@
+--- before/Scripts/PetTownFarmState.cs
++++ after/Scripts/PetTownFarmState.cs
+@@ -15,11 +15,13 @@
+     public const int Kind=9,PlotCount=9,Limit=10000;
+     public PetTownPoultryState poultry;
+     public PetTownPoultryState Poultry{get{if(poultry==null)poultry=new PetTownPoultryState();return poultry;}}
+-    public int version=1,revision;
++    public int version=2,revision;
+     public List<PetTownFarmRecord> lots=new List<PetTownFarmRecord>();
+-    public int[] seeds=new int[2],produce=new int[2];
+-    public static readonly string[] Names={"양배추","토마토"};
+-    public static readonly int[] SeedPrice={15,25},SellPrice={35,55},GrowDays={2,3};
++    public int[] seeds=new int[CropCount],produce=new int[CropCount];
++    public const int CropCount=7;
++    public static bool ValidCrop(int crop)=>crop>=0&&crop<CropCount;
++    public static readonly string[] Names={"양배추","토마토","당근","옥수수","밀","호박","감자"};
++    public static readonly int[] SeedPrice={15,25,20,30,12,40,18},SellPrice={35,55,45,65,30,90,40},GrowDays={2,3,2,3,2,4,2};
+     public PetTownFarmRecord Get(string id,int day)
+     {
+         if(string.IsNullOrEmpty(id))return null;var lot=lots.Find(l=>l.id==id);if(lot!=null)return lot;
+@@ -27,35 +29,49 @@
+     }
+     public bool BuySeeds(int crop,int amount,ref int gold)
+     {
+-        if(crop<0||crop>1||amount<=0||amount>100||seeds[crop]>Limit-amount||gold<SeedPrice[crop]*amount)return false;
++        if(!ValidCrop(crop)||amount<=0||amount>100||seeds[crop]>Limit-amount||gold<SeedPrice[crop]*amount)return false;
+         gold-=SeedPrice[crop]*amount;seeds[crop]+=amount;revision++;return true;
+     }
+     bool Owns(PetTownFarmRecord lot,int index)=>lot!=null&&lots.Contains(lot)&&index>=0&&index<lot.plots.Count;
+     public bool Plant(PetTownFarmRecord lot,int index,int crop)
+     {
+-        if(!Owns(lot,index)||crop<0||crop>1||lot.plots[index].crop>=0||seeds[crop]<=0)return false;
++        if(!Owns(lot,index)||!ValidCrop(crop)||lot.plots[index].crop>=0||seeds[crop]<=0)return false;
+         seeds[crop]--;var p=lot.plots[index];p.crop=crop;p.grown=0;p.wateredDay=-1;revision++;return true;
+     }
+     public bool Water(PetTownFarmRecord lot,int index,int day)
+     {
+         if(!Owns(lot,index)||day<lot.lastDay)return false;var p=lot.plots[index];
+-        if(p.crop<0||p.wateredDay>=day||p.grown>=GrowDays[p.crop])return false;p.wateredDay=day;revision++;return true;
++        if(!ValidCrop(p.crop)||p.wateredDay>=day||p.grown>=GrowDays[p.crop])return false;p.wateredDay=day;revision++;return true;
+     }
+     public bool Harvest(PetTownFarmRecord lot,int index,out int crop)
+     {
+         crop=-1;if(!Owns(lot,index))return false;var p=lot.plots[index];
+-        if(p.crop<0||p.crop>1||p.grown<GrowDays[p.crop]||produce[p.crop]>=Limit)return false;
++        if(!ValidCrop(p.crop)||p.grown<GrowDays[p.crop]||produce[p.crop]>=Limit)return false;
+         crop=p.crop;produce[crop]++;p.crop=-1;p.grown=0;p.wateredDay=-1;revision++;return true;
+     }
+     public bool Sell(int crop,int amount,ref int gold)
+     {
+-        if(crop<0||crop>1||amount<=0||amount>Limit||produce[crop]<amount||(long)gold+(long)SellPrice[crop]*amount>int.MaxValue)return false;
++        if(!ValidCrop(crop)||amount<=0||amount>Limit||produce[crop]<amount||(long)gold+(long)SellPrice[crop]*amount>int.MaxValue)return false;
+         produce[crop]-=amount;gold+=SellPrice[crop]*amount;revision++;return true;
+     }
+     public bool MakeIngredients(PetTownFacilityState facilities,int amount)
+     {
+         if(facilities==null||amount<=0||amount>Limit-facilities.cafeIngredients||produce[0]+produce[1]<amount)return false;
+         int first=Math.Min(amount,produce[0]);produce[0]-=first;produce[1]-=amount-first;facilities.cafeIngredients+=amount;revision++;return true;
++    }
++    public static int GrainFeedYield(int crop)=>crop==3?20:crop==4?10:0;
++    bool SpendGrain(int crop,int currentFeed,out int amount)
++    {
++        amount=GrainFeedYield(crop);if(amount<=0||produce==null||produce.Length<=crop||produce[crop]<=0||currentFeed>Limit-amount)return false;
++        produce[crop]--;revision++;return true;
++    }
++    public bool MakePoultryFeed(int crop,PetTownPoultryState target)
++    {
++        if(target==null||!SpendGrain(crop,target.feed,out int amount))return false;target.feed+=amount;target.revision++;return true;
++    }
++    public bool MakeRanchFeed(int crop,PetTownRanchState target)
++    {
++        if(target==null||!SpendGrain(crop,target.feed,out int amount))return false;target.feed+=amount;target.revision++;return true;
+     }
+     public bool AdvanceDay(int day)
+     {
+@@ -64,19 +80,19 @@
+             if(day<=lot.lastDay)continue;int previous=lot.lastDay;lot.lastDay=day;
+             // Only a single consecutive played day counts. No growth backfill after a skipped date.
+             if(day!=previous+1)continue;
+-            foreach(var p in lot.plots)if(p.crop>=0&&p.crop<2&&p.grown<GrowDays[p.crop]&&p.wateredDay==previous){p.grown++;changed=true;}
++            foreach(var p in lot.plots)if(ValidCrop(p.crop)&&p.grown<GrowDays[p.crop]&&p.wateredDay==previous){p.grown++;changed=true;}
+         }
+         if(changed)revision++;return changed;
+     }
+     public void Normalize()
+     {
+-        if(poultry!=null)poultry.Normalize();
++        version=Math.Max(2,version);if(poultry!=null)poultry.Normalize();
+         seeds=Fix(seeds);produce=Fix(produce);if(lots==null)lots=new List<PetTownFarmRecord>();var ids=new HashSet<string>();lots.RemoveAll(l=>l==null||string.IsNullOrEmpty(l.id)||!ids.Add(l.id));
+         foreach(var lot in lots)
+         {
+             lot.lastDay=Mathf.Max(0,lot.lastDay);if(lot.plots==null)lot.plots=new List<PetTownFarmPlot>();while(lot.plots.Count<PlotCount)lot.plots.Add(new PetTownFarmPlot());if(lot.plots.Count>PlotCount)lot.plots.RemoveRange(PlotCount,lot.plots.Count-PlotCount);
+-            for(int i=0;i<PlotCount;i++){if(lot.plots[i]==null)lot.plots[i]=new PetTownFarmPlot();var p=lot.plots[i];if(p.crop<0||p.crop>1){p.crop=-1;p.grown=0;p.wateredDay=-1;}else p.grown=Mathf.Clamp(p.grown,0,GrowDays[p.crop]);}
++            for(int i=0;i<PlotCount;i++){if(lot.plots[i]==null)lot.plots[i]=new PetTownFarmPlot();var p=lot.plots[i];if(!ValidCrop(p.crop)){p.crop=-1;p.grown=0;p.wateredDay=-1;}else p.grown=Mathf.Clamp(p.grown,0,GrowDays[p.crop]);}
+         }
+     }
+-    static int[] Fix(int[] values){var result=new int[2];if(values!=null)for(int i=0;i<Math.Min(2,values.Length);i++)result[i]=Mathf.Clamp(values[i],0,Limit);return result;}
++    static int[] Fix(int[] values){var result=new int[CropCount];if(values!=null)for(int i=0;i<Math.Min(CropCount,values.Length);i++)result[i]=Mathf.Clamp(values[i],0,Limit);return result;}
+ }
+--- before/Scripts/PetTownFarmLibrary.cs
++++ after/Scripts/PetTownFarmLibrary.cs
+@@ -4,8 +4,12 @@
+ public sealed class PetTownFarmLibrary : ScriptableObject
+ {
+     public GameObject soil,cabbage,tomato,fence,barn,crate,wateringCan;
+-    public Texture2D thumbnail;
++    public GameObject carrot,corn,wheat,pumpkin,potato;
++    public Texture2D thumbnail;public Texture2D[] cropIcons=new Texture2D[PetTownFarmState.CropCount];
++    public Texture2D CropIcon(int kind)=>cropIcons!=null&&kind>=0&&kind<cropIcons.Length?cropIcons[kind]:null;
+     public bool Ready=>soil&&cabbage&&tomato&&fence&&barn&&crate&&wateringCan;
++    public GameObject Crop(int kind)=>kind==0?cabbage:kind==1?tomato:kind==2?carrot:kind==3?corn:kind==4?wheat:kind==5?pumpkin:kind==6?potato:null;
++    public static Vector3 CropSize(int kind)=>kind==0?new Vector3(.8f,.55f,.8f):kind==1?new Vector3(.75f,1.05f,.75f):kind==2?new Vector3(.75f,.65f,.75f):kind==3?new Vector3(.8f,1.55f,.8f):kind==4?new Vector3(.8f,1.15f,.8f):kind==5?new Vector3(.95f,.55f,.95f):new Vector3(.8f,.65f,.8f);
+     static PetTownFarmLibrary cached;
+     public static PetTownFarmLibrary Current=>cached?cached:(cached=Resources.Load<PetTownFarmLibrary>("Environment/Farm/Library"));
+ }
+--- before/Scripts/PetTownFarmView.cs
++++ after/Scripts/PetTownFarmView.cs
+@@ -8,6 +8,7 @@
+     public string Id {get;private set;}
+     PetTownGame game;PetTownFarmLibrary library;Transform models,crops;
+     readonly Dictionary<Material,Material> materials=new Dictionary<Material,Material>();
++    readonly List<Mesh> cropMeshes=new List<Mesh>();
+     readonly List<Renderer>[] soil=new List<Renderer>[9];
+     MaterialPropertyBlock wet;Material meadowGround;
+     int revision=-1,lastDay=-1,signature;float next;
+@@ -49,7 +50,7 @@
+         var collider=node.AddComponent<BoxCollider>();collider.size=size;
+         var obstacle=node.AddComponent<NavMeshObstacle>();obstacle.shape=NavMeshObstacleShape.Box;obstacle.size=size;obstacle.carving=true;obstacle.carveOnlyStationary=false;
+     }
+-    GameObject Spawn(GameObject prefab,string label,Vector3 position,Vector3 size,float yaw=0,Transform parent=null)
++    GameObject Spawn(GameObject prefab,string label,Vector3 position,Vector3 size,float yaw=0,Transform parent=null,bool uniform=false)
+     {
+         var holder=new GameObject(label);holder.transform.SetParent(parent?parent:models,false);if(!prefab)return holder;
+         var fit=new GameObject("AlignedFit").transform;fit.SetParent(holder.transform,false);var instance=Instantiate(prefab,fit);instance.transform.localPosition=Vector3.zero;
+@@ -59,7 +60,7 @@
+             var replaced=renderer.sharedMaterials;for(int i=0;i<replaced.Length;i++)replaced[i]=Styled(replaced[i]);renderer.sharedMaterials=replaced;
+             renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.On;renderer.receiveShadows=true;
+         }
+-        var bounds=LocalBounds(holder.transform);fit.localScale=new Vector3(size.x/Mathf.Max(.01f,bounds.size.x),size.y/Mathf.Max(.01f,bounds.size.y),size.z/Mathf.Max(.01f,bounds.size.z));
++        var bounds=LocalBounds(holder.transform);var scale=new Vector3(size.x/Mathf.Max(.01f,bounds.size.x),size.y/Mathf.Max(.01f,bounds.size.y),size.z/Mathf.Max(.01f,bounds.size.z));fit.localScale=uniform?Vector3.one*Mathf.Min(scale.x,scale.y,scale.z):scale;
+         bounds=LocalBounds(holder.transform);fit.localPosition-=new Vector3(bounds.center.x,bounds.min.y,bounds.center.z);
+         holder.transform.localPosition=position;holder.transform.localRotation=Quaternion.Euler(0,yaw,0);return holder;
+     }
+@@ -67,8 +68,8 @@
+     {
+         if(!source)return null;if(materials.TryGetValue(source,out var cached))return cached;
+         var material=new Material(Shader.Find("Universal Render Pipeline/Lit")){name=source.name+"_FarmLit",enableInstancing=true};
+-        var texture=source.HasProperty("_BaseMap")?source.GetTexture("_BaseMap"):source.mainTexture;var color=source.HasProperty("_BaseColor")?source.GetColor("_BaseColor"):source.color;
+-        material.SetTexture("_BaseMap",texture);material.SetColor("_BaseColor",color);material.SetFloat("_Smoothness",.12f);material.SetFloat("_Metallic",0);materials[source]=material;return material;
++        var texture=source.HasProperty("_BaseMap")?source.GetTexture("_BaseMap"):source.HasProperty("baseColorTexture")?source.GetTexture("baseColorTexture"):source.mainTexture;var color=source.HasProperty("_BaseColor")?source.GetColor("_BaseColor"):source.HasProperty("baseColorFactor")?source.GetColor("baseColorFactor"):source.color;
++        material.SetTexture("_BaseMap",texture);material.SetColor("_BaseColor",color);material.SetFloat("_Smoothness",.12f);material.SetFloat("_Metallic",0);material.SetFloat("_Cull",0);materials[source]=material;return material;
+     }
+     static Bounds LocalBounds(Transform root)
+     {
+@@ -78,26 +79,52 @@
+         }
+         return bounds;
+     }
+-    int Signature(PetTownFarmRecord lot){int hash=17;foreach(var p in lot.plots)hash=unchecked(hash*31+p.crop*7+p.grown*13+p.wateredDay*19);return hash;}
++    int Signature(PetTownFarmRecord lot){int hash=17;foreach(var p in lot.plots)hash=unchecked(hash*31+p.crop*7+p.grown*13);return hash;}
+     void Update()
+     {
+         if(!game||Time.unscaledTime<next)return;next=Time.unscaledTime+.25f;var state=game.Progression.Farm;
+         if(revision==state.revision&&lastDay==game.CurrentFarmDay)return;var lot=state.lots.Find(l=>l.id==Id);
+-        if(lot!=null&&(signature!=Signature(lot)||lastDay!=game.CurrentFarmDay))Refresh();else revision=state.revision;
++        if(lot!=null)Refresh();else revision=state.revision;
+     }
+     public void Refresh()
+     {
+         if(!game||!library)return;var state=game.Progression.Farm;var lot=state.lots.Find(l=>l.id==Id);if(lot==null)return;
+-        revision=state.revision;lastDay=game.CurrentFarmDay;signature=Signature(lot);if(crops){crops.gameObject.SetActive(false);Destroy(crops.gameObject);}crops=new GameObject("GrowingCrops").transform;crops.SetParent(models,false);
++        int nextSignature=Signature(lot);bool rebuild=!crops||nextSignature!=signature;
++        revision=state.revision;lastDay=game.CurrentFarmDay;signature=nextSignature;RefreshWetSoil(lot);if(!rebuild)return;
++        foreach(var mesh in cropMeshes)if(mesh)Destroy(mesh);cropMeshes.Clear();if(crops){crops.gameObject.SetActive(false);Destroy(crops.gameObject);}crops=new GameObject("GrowingCrops").transform;crops.SetParent(models,false);
+         for(int i=0;i<9;i++)
+         {
+-            var plot=lot.plots[i];foreach(var renderer in soil[i])if(renderer){var slots=renderer.sharedMaterials;for(int m=0;m<slots.Length;m++){wet.Clear();var color=slots[m]&&slots[m].HasProperty("_BaseColor")?slots[m].GetColor("_BaseColor"):Color.white;wet.SetColor("_BaseColor",color*(plot.wateredDay==lastDay?new Color(.64f,.64f,.64f,1):Color.white));renderer.SetPropertyBlock(wet,m);}}
+-            if(plot.crop<0)continue;float growth=Mathf.Lerp(.28f,1,plot.grown/(float)PetTownFarmState.GrowDays[plot.crop]);
++            var plot=lot.plots[i];
++            if(!PetTownFarmState.ValidCrop(plot.crop))continue;float growth=Mathf.Lerp(.28f,1,plot.grown/(float)PetTownFarmState.GrowDays[plot.crop]);
+             for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)
+             {
+-                var plant=Spawn(plot.crop==0?library.cabbage:library.tomato,PetTownFarmState.Names[plot.crop],PlotPosition(i)+new Vector3(x*.87f,0,z*.87f),plot.crop==0?new Vector3(.8f,.55f,.8f):new Vector3(.75f,1.05f,.75f),0,crops);plant.transform.localScale=Vector3.one*growth;
++                var prefab=library.Crop(plot.crop);if(!prefab)continue;var plant=Spawn(prefab,PetTownFarmState.Names[plot.crop],PlotPosition(i)+new Vector3(x*.87f,0,z*.87f),PetTownFarmLibrary.CropSize(plot.crop),plot.crop>=2?((i*31+x*17+z*13)%4)*90:0,crops,plot.crop>=2);plant.transform.localScale=Vector3.one*growth;
+             }
+         }
++        BatchCrops();
+     }
+-    void OnDestroy(){if(meadowGround)Destroy(meadowGround);foreach(var material in materials.Values)if(material)Destroy(material);}
++    void RefreshWetSoil(PetTownFarmRecord lot)
++    {
++        for(int i=0;i<soil.Length;i++)foreach(var renderer in soil[i])if(renderer)
++        {
++            var slots=renderer.sharedMaterials;for(int m=0;m<slots.Length;m++){wet.Clear();var color=slots[m]&&slots[m].HasProperty("_BaseColor")?slots[m].GetColor("_BaseColor"):Color.white;wet.SetColor("_BaseColor",color*(lot.plots[i].wateredDay==lastDay?new Color(.64f,.64f,.64f,1):Color.white));renderer.SetPropertyBlock(wet,m);}
++        }
++    }
++    void BatchCrops()
++    {
++        var groups=new Dictionary<Material,List<CombineInstance>>();var used=new List<MeshRenderer>();
++        foreach(var filter in crops.GetComponentsInChildren<MeshFilter>())
++        {
++            var renderer=filter.GetComponent<MeshRenderer>();var mesh=filter.sharedMesh;if(!renderer||!mesh||!mesh.isReadable)continue;var slots=renderer.sharedMaterials;
++            if(slots.Length<mesh.subMeshCount)continue;bool complete=true;for(int sub=0;sub<mesh.subMeshCount;sub++)if(!slots[sub])complete=false;if(!complete)continue;
++            for(int sub=0;sub<mesh.subMeshCount;sub++){var material=slots[sub];if(!groups.TryGetValue(material,out var list)){list=new List<CombineInstance>();groups[material]=list;}list.Add(new CombineInstance{mesh=mesh,subMeshIndex=sub,transform=crops.worldToLocalMatrix*filter.transform.localToWorldMatrix});}used.Add(renderer);
++        }
++        foreach(var group in groups)
++        {
++            var mesh=new Mesh{name="FarmCropBatch"};long count=0;foreach(var item in group.Value)count+=item.mesh.vertexCount;if(count>65000)mesh.indexFormat=UnityEngine.Rendering.IndexFormat.UInt32;mesh.CombineMeshes(group.Value.ToArray(),true,true);cropMeshes.Add(mesh);
++            var node=new GameObject("CropBatch_"+group.Key.name,typeof(MeshFilter),typeof(MeshRenderer));node.transform.SetParent(crops,false);node.GetComponent<MeshFilter>().sharedMesh=mesh;node.GetComponent<MeshRenderer>().sharedMaterial=group.Key;
++        }
++        foreach(var renderer in used)renderer.enabled=false;
++    }
++    void OnDestroy(){foreach(var mesh in cropMeshes)if(mesh)Destroy(mesh);if(meadowGround)Destroy(meadowGround);foreach(var material in materials.Values)if(material)Destroy(material);}
+ }
+--- before/Scripts/PetTownGame.Farm.cs
++++ after/Scripts/PetTownGame.Farm.cs
+@@ -30,7 +30,7 @@
+     void FarmNewDay(){if(Progression.farm!=null){Progression.farm.AdvanceDay(day);if(Progression.farm.poultry!=null)Progression.farm.poultry.AdvanceDay(day,FarmRoots().ConvertAll(x=>x.Id));}}
+     string FarmStatus(PetTownFarmPlot p)
+     {
+-        if(p.crop<0)return "비어 있는 밭";if(p.grown>=PetTownFarmState.GrowDays[p.crop])return PetTownFarmState.Names[p.crop]+" · 수확 가능";
++        if(!PetTownFarmState.ValidCrop(p.crop))return "비어 있는 밭";if(p.grown>=PetTownFarmState.GrowDays[p.crop])return PetTownFarmState.Names[p.crop]+" · 수확 가능";
+         return PetTownFarmState.Names[p.crop]+" · 성장 "+p.grown+" / "+PetTownFarmState.GrowDays[p.crop]+"일";
+     }
+     void OpenFarmManagement()
+@@ -39,7 +39,7 @@
+         for(int i=0;i<roots.Count;i++)
+         {
+             var view=roots[i];var lot=Progression.Farm.Get(view.Id,day);int key=i;
+-            var e=OperationsEntry(key,"농장 "+(i+1),"밭 "+lot.plots.Count+"칸",lot.plots.FindAll(p=>p.crop>=0).Count+"칸 재배 중","밭 관리","씨앗을 심고 매일 물을 주면 자랍니다.\n양배추2일 · 토마토3일. 물을 주지 않으면 그날의 성장이 멈춥니다.",3);e.Thumbnail=PetTownFarmLibrary.Current?.thumbnail;entries.Add(e);
++            var e=OperationsEntry(key,"농장 "+(i+1),"밭 "+lot.plots.Count+"칸",lot.plots.FindAll(p=>p.crop>=0).Count+"칸 재배 중","밭 관리","씨앗을 심고 매일 물을 주면 자랍니다.\n양배추·당근·밀·감자2일, 토마토·옥수수3일, 호박4일. 물을 주지 않으면 그날의 성장이 멈춥니다.",3);e.Thumbnail=PetTownFarmLibrary.Current?.thumbnail;entries.Add(e);
+         }
+         entries.Add(OperationsEntry(-1,"농장 짓기","3,000 골드 · 18×20m","건설 목록에서 위치 선택","건설 목록","입구 방향을 돌려 배치하고 길을 연결할 수 있어요. 기존 도로 위에는 짓지 않습니다.",0));
+         catalogWindow.Show("농장 관리",entries,e=>{if(e.Key==-1){SetMode(Mode.Build);OpenConstructionCatalog();}else if(e.Key<roots.Count&&roots[e.Key])OpenFarmLot(roots[e.Key].Id);},()=>{},()=>{});
+@@ -48,7 +48,7 @@
+     {
+         if(!FarmReady(id,out var lot))return;var entries=new List<PetTownCatalogEntry>();
+         entries.Add(OperationsEntry(100,"밭에 모두 물주기","오늘 물이 필요한 밭 관리","물을 준 날만 성장합니다","모두 물주기","하루에 한 번씩 줄 수 있어요. 빈 밭과 수확 가능한 밭은 제외합니다.",2));
+-        entries.Add(OperationsEntry(101,"씨앗과 수확물","씨앗 구매·작물 판매","수확물을 카페 재료로도 사용","농장 상점","양배추와 토마토 씨앗을 사고 수확물을 정리합니다.",2));
++        entries.Add(OperationsEntry(101,"씨앗과 수확물","씨앗 구매·작물 판매","수확물을 카페 재료로도 사용","농장 상점","일곱 종류의 씨앗을 사고 수확물을 정리합니다.",2));
+         entries.Add(OperationsEntry(103,"닭장과 달걀",Progression.Farm.poultry?.Find(id)!=null?"병아리·먹이·물·달걀 관리":"농장 뒤편에 닭장 추가","닭장 700 골드 · 정원6마리","닭장 보기","기존 밭9칸을 유지하며 뒤편 빈 공간에 짓습니다.",9));
+         entries.Add(OperationsEntry(104,lot.staffService?"직원 자동 업무 끄기":"직원 자동 업무 켜기",lot.staffService?"밭·닭장 관리 중":"직접 관리",FacilityStaffSummary(id),"전환하기","배치한 농장 관리사가 물주기·수확과 닭장 먹이·물·청소·달걀 수집을 합니다. 씨앗 구매·심기·판매는 직접 결정합니다.",5));
+         entries.Add(OperationsEntry(105,"농장 직원 배치",FacilityStaffSummary(id),"농장 관리사 고용·배정","직원 선택","직원이 직접 작업 지점으로 이동합니다. 미지급 급여와 휴무 중에는 쉽니다.",5));
+@@ -68,41 +68,42 @@
+     void OpenFarmPlot(string id,int index)
+     {
+         if(!FarmReady(id,out var lot)||index<0||index>=lot.plots.Count)return;var p=lot.plots[index];var entries=new List<PetTownCatalogEntry>();
+-        if(p.crop<0)for(int crop=0;crop<2;crop++)
++        if(p.crop<0)for(int crop=0;crop<PetTownFarmState.CropCount;crop++)
+         {
+-            int kind=crop;var e=OperationsEntry(kind,PetTownFarmState.Names[kind]+" 심기","씨앗 "+Progression.Farm.seeds[kind]+"개 보유","매일 물주기 · "+PetTownFarmState.GrowDays[kind]+"일 성장","심기","심을 때 씨앗1개를 사용합니다.\n심은 뒤 물주기를 해야 다음 날 자랍니다.",3);e.PriceProvider=()=>"씨앗 "+Progression.Farm.seeds[kind]+"개 보유";entries.Add(e);
++            int kind=crop;var e=OperationsEntry(kind,PetTownFarmState.Names[kind]+" 심기","씨앗 "+Progression.Farm.seeds[kind]+"개 보유","매일 물주기 · "+PetTownFarmState.GrowDays[kind]+"일 성장","심기","심을 때 씨앗1개를 사용합니다.\n심은 뒤 물주기를 해야 다음 날 자랍니다.",3);e.Thumbnail=PetTownFarmLibrary.Current?.CropIcon(kind);e.PriceProvider=()=>"씨앗 "+Progression.Farm.seeds[kind]+"개 보유";entries.Add(e);
+         }
+-        else if(p.grown>=PetTownFarmState.GrowDays[p.crop])entries.Add(OperationsEntry(3,"수확하기",FarmStatus(p),"수확물 1개를 받습니다","수확하기","수확한 뒤 빈 밭에 다시 씨앗을 심을 수 있어요.\n수확물은 농장 상점에서 판매하거나 카페 재료로 바꿉니다.",3));
++        else if(p.grown>=PetTownFarmState.GrowDays[p.crop])entries.Add(OperationsEntry(-2,"수확하기",FarmStatus(p),"수확물 1개를 받습니다","수확하기","수확한 뒤 빈 밭에 다시 씨앗을 심을 수 있어요.\n"+(p.crop<2?"양배추·토마토는 판매하거나 기본 카페 재료로 바꿉니다.":p.crop==3||p.crop==4?"옥수수·밀은 판매하거나 닭/가축 먹이로 바꿉니다.":"이 작물은 농장 상점에서 판매할 수 있어요."),3));
+         else
+         {
+-            var e=OperationsEntry(2,"물주기",FarmStatus(p),p.wateredDay==day?"오늘 물주기 완료":"오늘 물이 필요해요","물주기","물을 준 날의 다음 날에1단계 자랍니다. 같은 날 여러 번 물을 줘도 더 빨리 자라지 않습니다.",2);e.PriceProvider=()=>FarmStatus(p);e.SizeProvider=()=>p.wateredDay==day?"오늘 물주기 완료":"오늘 물이 필요해요";entries.Add(e);
++            var e=OperationsEntry(-1,"물주기",FarmStatus(p),p.wateredDay==day?"오늘 물주기 완료":"오늘 물이 필요해요","물주기","물을 준 날의 다음 날에1단계 자랍니다. 같은 날 여러 번 물을 줘도 더 빨리 자라지 않습니다.",2);e.PriceProvider=()=>FarmStatus(p);e.SizeProvider=()=>p.wateredDay==day?"오늘 물주기 완료":"오늘 물이 필요해요";entries.Add(e);
+         }
+-        entries.Add(OperationsEntry(4,"씨앗과 수확물","씨앗 구매·판매","농장 상점","상점 보기","씨앗이 부족하면 상점에서 구매해 주세요.",2));
+-        entries.Add(OperationsEntry(5,"밭 목록","다른 밭 관리","9칸의 밭","목록 보기","농장 밭 목록으로 돌아갑니다.",3));
++        entries.Add(OperationsEntry(-3,"씨앗과 수확물","씨앗 구매·판매","농장 상점","상점 보기","씨앗이 부족하면 상점에서 구매해 주세요.",2));
++        entries.Add(OperationsEntry(-4,"밭 목록","다른 밭 관리","9칸의 밭","목록 보기","농장 밭 목록으로 돌아갑니다.",3));
+         catalogWindow.Show("농장 · 밭 "+(index+1),entries,e=>
+         {
+-            if(e.Key==4){OpenFarmMarket(id);return;}if(e.Key==5){OpenFarmLot(id);return;}if(!FarmReady(id,out var current))return;bool done=false;
+-            if(e.Key<2)done=Progression.Farm.Plant(current,index,e.Key);
+-            else if(e.Key==2)done=Progression.Farm.Water(current,index,day);
+-            else if(e.Key==3&&Progression.Farm.Harvest(current,index,out int crop)){done=true;money+=Progression.AddExperience(3);Operations.Record("harvest");}
+-            if(done){progressionDirty=true;SaveProgressionSilent();Message(e.Key<2?"씨앗을 심었어요. 물을 주면 자라요.":e.Key==2?"밭에 물을 주었어요.":"수확물을1개 받았어요!");}else Message("씨앗·성장 상태와 오늘 물주기 여부를 확인해 주세요.");OpenFarmPlot(id,index);
++            if(e.Key==-3){OpenFarmMarket(id);return;}if(e.Key==-4){OpenFarmLot(id);return;}if(!FarmReady(id,out var current))return;bool done=false;
++            if(PetTownFarmState.ValidCrop(e.Key))done=Progression.Farm.Plant(current,index,e.Key);
++            else if(e.Key==-1)done=Progression.Farm.Water(current,index,day);
++            else if(e.Key==-2&&Progression.Farm.Harvest(current,index,out int crop)){done=true;money+=Progression.AddExperience(3);Operations.Record("harvest");}
++            if(done){progressionDirty=true;SaveProgressionSilent();Message(PetTownFarmState.ValidCrop(e.Key)?"씨앗을 심었어요. 물을 주면 자라요.":e.Key==-1?"밭에 물을 주었어요.":"수확물을1개 받았어요!");}else Message("씨앗·성장 상태와 오늘 물주기 여부를 확인해 주세요.");OpenFarmPlot(id,index);
+         },()=>{},()=>{});
+     }
+     void OpenFarmMarket(string id)
+     {
+         if(!FarmReady(id,out var lot))return;var farm=Progression.Farm;var entries=new List<PetTownCatalogEntry>();
+-        for(int crop=0;crop<2;crop++)
++        for(int crop=0;crop<PetTownFarmState.CropCount;crop++)
+         {
+-            int kind=crop;var buy=OperationsEntry(kind,PetTownFarmState.Names[kind]+" 씨앗 5개",PetTownFarmState.SeedPrice[kind]*5+" 골드","보유 "+farm.seeds[kind]+"개","5개 구매","씨앗은 빈 밭에 하나씩 심습니다.",2);buy.SizeProvider=()=>"보유 "+farm.seeds[kind]+"개";entries.Add(buy);
+-            var sell=OperationsEntry(10+kind,PetTownFarmState.Names[kind]+" 판매","보유 "+farm.produce[kind]+"개","1개 "+PetTownFarmState.SellPrice[kind]+" 골드","모두 판매","선택한 종류의 수확물을 모두 판매합니다.",2);sell.PriceProvider=()=>"보유 "+farm.produce[kind]+"개";entries.Add(sell);
++            int kind=crop;var buy=OperationsEntry(kind,PetTownFarmState.Names[kind]+" 씨앗 5개",PetTownFarmState.SeedPrice[kind]*5+" 골드","보유 "+farm.seeds[kind]+"개","5개 구매","씨앗은 빈 밭에 하나씩 심습니다. 매일 물을 주며 "+PetTownFarmState.GrowDays[kind]+"일 동안 키웁니다.",2);buy.Thumbnail=PetTownFarmLibrary.Current?.CropIcon(kind);buy.SizeProvider=()=>"보유 "+farm.seeds[kind]+"개";entries.Add(buy);
++            var sell=OperationsEntry(10+kind,PetTownFarmState.Names[kind]+" 판매","보유 "+farm.produce[kind]+"개","1개 "+PetTownFarmState.SellPrice[kind]+" 골드","모두 판매","선택한 종류의 수확물을 모두 판매합니다.",2);sell.Thumbnail=PetTownFarmLibrary.Current?.CropIcon(kind);sell.PriceProvider=()=>"보유 "+farm.produce[kind]+"개";entries.Add(sell);
+         }
+         bool cafe=buildings.Exists(b=>b&&b.GetComponent<PetTownInteriorState>()&&b.GetComponent<PetTownInteriorState>().Kind==3);
+-        if(cafe)entries.Add(OperationsEntry(20,"카페 재료 만들기","수확물 5개 → 재료 5개","양배추부터 사용합니다","5개 만들기","농장 수확물5개를 카페 공용 재료5개로 바꿉니다. 원하지 않으면 작물로 판매할 수 있어요.",3));
++        if(cafe)entries.Add(OperationsEntry(20,"카페 재료 만들기","양배추·토마토5개 사용","양배추부터 기본 재료5개로","5개 만들기","양배추와 토마토 수확물5개를 카페 공용 재료5개로 바꿉니다. 원하지 않으면 작물로 판매할 수 있어요.",3));
++        entries.Add(OperationsEntry(40,"곡물로 먹이 만들기","옥수수·밀 수확물 사용","닭·가축 먹이를 따로 보관","먹이 만들기","옥수수1개로20개, 밀1개로10개의 먹이를 만듭니다. 실제 닭장 또는 목장이 필요해요.",2));
+         entries.Add(OperationsEntry(30,"밭 목록","농장으로 돌아가기","심기·물주기·수확","밭 보기","농장 밭을 관리합니다.",3));
+         catalogWindow.Show("농장 · 씨앗과 수확물",entries,e=>
+         {
+-            if(e.Key==30){OpenFarmLot(id);return;}if(!FarmReady(id,out var current))return;bool done=e.Key<2?farm.BuySeeds(e.Key,5,ref money):e.Key<12?farm.Sell(e.Key-10,farm.produce[e.Key-10],ref money):e.Key==20&&cafe&&farm.MakeIngredients(Progression.Facilities,5);
+-            if(done){progressionDirty=true;SaveProgressionSilent();Message(e.Key<2?"씨앗5개를 구매했어요.":e.Key<12?"수확물을 판매했어요.":"카페 재료5개를 만들었어요.");}else Message("골드와 보유 수량을 확인해 주세요.");OpenFarmMarket(id);
++            if(e.Key==40){OpenFarmGrainFeed(id);return;}if(e.Key==30){OpenFarmLot(id);return;}if(!FarmReady(id,out var current))return;bool done=PetTownFarmState.ValidCrop(e.Key)?farm.BuySeeds(e.Key,5,ref money):PetTownFarmState.ValidCrop(e.Key-10)?farm.Sell(e.Key-10,farm.produce[e.Key-10],ref money):e.Key==20&&cafe&&farm.MakeIngredients(Progression.Facilities,5);
++            if(done){progressionDirty=true;SaveProgressionSilent();Message(PetTownFarmState.ValidCrop(e.Key)?"씨앗5개를 구매했어요.":PetTownFarmState.ValidCrop(e.Key-10)?"수확물을 판매했어요.":"카페 재료5개를 만들었어요.");}else Message("골드와 보유 수량을 확인해 주세요.");OpenFarmMarket(id);
+         },()=>{},()=>{});
+     }
+ }
+--- before/Resources/Environment/Farm/Library.asset
++++ after/Resources/Environment/Farm/Library.asset
+@@ -19,4 +19,17 @@
+   barn: {fileID: 6379937049707072066, guid: d4d4291441c882d44a25035f11a8493f, type: 3}
+   crate: {fileID: 4151725995839062632, guid: d26dc1241d332c342b898a57f1164932, type: 3}
+   wateringCan: {fileID: 3928642541961935006, guid: 8877f4aac7d3c184ea4954647487e084, type: 3}
++  carrot: {fileID: -8903435023650923721, guid: 3656439569297a848bd8caf8e8abe6e3, type: 3}
++  corn: {fileID: -6569304847485161275, guid: 7fb5b8344fd3e8c4785da510c80efb1a, type: 3}
++  wheat: {fileID: -1895751040323123547, guid: 20b78c73720a12c4882692c1430c40ec, type: 3}
++  pumpkin: {fileID: -780504395670503867, guid: 875ddf38fdeba4d458e08608ca6a0d78, type: 3}
++  potato: {fileID: 6758561889708201982, guid: 40fc4a729ccf8aa4d98426ae7f288b3e, type: 3}
+   thumbnail: {fileID: 2800000, guid: 81dfef11234458047a4fbb80b6a37ded, type: 3}
++  cropIcons:
++  - {fileID: 2800000, guid: 8d42faa3175813d4bb256676f8f6bf3e, type: 3}
++  - {fileID: 2800000, guid: 6b313a5fbe1bab7478ae40ecefa4d08f, type: 3}
++  - {fileID: 2800000, guid: a89612385b21e0845aecf2da1089be4e, type: 3}
++  - {fileID: 2800000, guid: 692fed3791609f44a94c54c7c49d112f, type: 3}
++  - {fileID: 2800000, guid: 140fdb0f8f706984cadda21b84e18bf3, type: 3}
++  - {fileID: 2800000, guid: bc549784e8d6152469444012ca22e8e5, type: 3}
++  - {fileID: 2800000, guid: 7dcb82ed4bde0aa44953aef1d33213bc, type: 3}

@@ -1,0 +1,51 @@
+[
+  {
+    "crop": 0,
+    "transparent": 48503,
+    "visible": 17033,
+    "magenta": 0,
+    "pass": true
+  },
+  {
+    "crop": 1,
+    "transparent": 61825,
+    "visible": 3711,
+    "magenta": 0,
+    "pass": true
+  },
+  {
+    "crop": 2,
+    "transparent": 59377,
+    "visible": 6159,
+    "magenta": 0,
+    "pass": true
+  },
+  {
+    "crop": 3,
+    "transparent": 62691,
+    "visible": 2845,
+    "magenta": 0,
+    "pass": true
+  },
+  {
+    "crop": 4,
+    "transparent": 61263,
+    "visible": 4273,
+    "magenta": 0,
+    "pass": true
+  },
+  {
+    "crop": 5,
+    "transparent": 57076,
+    "visible": 8460,
+    "magenta": 0,
+    "pass": true
+  },
+  {
+    "crop": 6,
+    "transparent": 58468,
+    "visible": 7068,
+    "magenta": 0,
+    "pass": true
+  }
+]

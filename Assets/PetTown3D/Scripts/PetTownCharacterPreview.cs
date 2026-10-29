@@ -14,6 +14,7 @@ public sealed class PetTownCharacterPreview : MonoBehaviour
     float orbitYaw = 180f;
     float zoom = 1.5f;
     Vector3 viewCenter;
+    bool keepCameraViewOnRebuild;
     readonly Dictionary<Transform, Transform> mapping = new Dictionary<Transform, Transform>();
     public RenderTexture Texture { get { return texture; } }
 
@@ -50,7 +51,8 @@ public sealed class PetTownCharacterPreview : MonoBehaviour
         previewCamera.farClipPlane = 30f;
         previewCamera.targetTexture = texture;
         // The imported model faces the opposite direction from the previous assumption.
-        viewCenter = previewRoot.transform.position + Vector3.up * 1.15f;
+        if (!keepCameraViewOnRebuild) viewCenter = previewRoot.transform.position + Vector3.up * 1.15f;
+        keepCameraViewOnRebuild = false;
         UpdateView();
         var lightObject = new GameObject("PetTown_Preview_Light_Only");
         lightObject.transform.SetParent(transform, false);
@@ -60,6 +62,18 @@ public sealed class PetTownCharacterPreview : MonoBehaviour
         previewLight.intensity = 1.6f;
         previewLight.transform.rotation = Quaternion.Euler(30f, -20f, 0f);
         RefreshColors();
+    }
+
+    void LateUpdate()
+    {
+        if (previewRoot == null || source == null) return;
+        foreach (var pair in mapping)
+        {
+            if (pair.Key == null || pair.Value == null || pair.Key == source) continue;
+            pair.Value.localPosition = pair.Key.localPosition;
+            pair.Value.localRotation = pair.Key.localRotation;
+            pair.Value.localScale = pair.Key.localScale;
+        }
     }
 
     void UpdateView()
@@ -79,7 +93,17 @@ public sealed class PetTownCharacterPreview : MonoBehaviour
 
     public void Zoom(float delta)
     {
-        zoom = Mathf.Clamp(zoom + delta, .8f, 3.5f);
+        zoom = Mathf.Clamp(zoom + delta, .18f, 3.5f);
+        UpdateView();
+    }
+
+    // Move the preview camera target upward/downward without moving the player or hairstyle.
+    public void PanVertical(float screenDragPixels)
+    {
+        if (previewRoot == null) return;
+        viewCenter.y = Mathf.Clamp(viewCenter.y + screenDragPixels * zoom * .004f,
+            previewRoot.transform.position.y + .3f,
+            previewRoot.transform.position.y + 2.8f);
         UpdateView();
     }
 
@@ -101,7 +125,12 @@ public sealed class PetTownCharacterPreview : MonoBehaviour
             dst.localScale = src.localScale;
         }
         mapping[src] = dst;
-        foreach (Transform child in src) CopyTransforms(child, dst, false);
+        foreach (Transform child in src)
+        {
+            // Unity Destroy() is deferred: never clone a disabled previous hairstyle.
+            if (!child.gameObject.activeInHierarchy || child.name.StartsWith("PetTown_Selected_Hair_") && !child.gameObject.activeSelf) continue;
+            CopyTransforms(child, dst, false);
+        }
     }
 
     void CopyRenderers()
@@ -134,6 +163,20 @@ public sealed class PetTownCharacterPreview : MonoBehaviour
                 if (skin.rootBone != null && mapping.TryGetValue(skin.rootBone, out var rootBone)) r.rootBone = rootBone;
             }
         }
+    }
+
+    // Rebuild the visual-only clone after a hairstyle changes.
+    public void RefreshHair()
+    {
+        // Keep the user's zoom, orbit and vertical camera pan when hair is adjusted.
+        keepCameraViewOnRebuild = previewRoot != null;
+        if (previewCamera != null) { previewCamera.targetTexture = null; Destroy(previewCamera.gameObject); previewCamera = null; }
+        if (previewLight != null) { Destroy(previewLight.gameObject); previewLight = null; }
+        if (texture != null) { texture.Release(); Destroy(texture); texture = null; }
+        if (previewRoot != null) { previewRoot.SetActive(false); Destroy(previewRoot); previewRoot = null; }
+        mapping.Clear();
+        source = null;
+        Build();
     }
 
     public void RefreshColors()

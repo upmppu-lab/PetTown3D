@@ -11,11 +11,12 @@ public static class PetTownWorldSafety
                (x > 52f - margin && x < 72f + margin && z > 35f - margin && z < 66f + margin);
     }
 
-    public static bool CanPlaceBuilding(Vector3 center, int kind, List<GameObject> buildings)
+    public static bool CanPlaceBuilding(Vector3 center, int kind, List<GameObject> buildings, Vector2? footprintOverride = null)
     {
         float width = kind == 0 ? 15f : kind == 2 ? 7f : kind == 7 ? 22f : (kind == 5 || kind == 6 ? 15f : 11f);
         float depth = kind == 0 ? 13f : kind == 2 ? 7f : kind == 7 ? 22f : (kind == 5 || kind == 6 ? 15f : 10f);
         if (kind == 8) { width = 5f; depth = 5f; }
+        if(footprintOverride.HasValue){width=footprintOverride.Value.x;depth=footprintOverride.Value.y;}
         for (float x = -width * .5f - .5f; x <= width * .5f + .5f; x += 1f)
             for (float z = -depth * .5f - .5f; z <= depth * .5f + .5f; z += 1f)
                 if (IsWater(center.x + x, center.z + z)) return false;

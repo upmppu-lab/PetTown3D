@@ -1,0 +1,9 @@
+MEASURE slots_list: texts=18 buttons=9 overflow=0 ellipsisCut=0 smallButtons=0
+MEASURE slot_cage_empty: texts=30 buttons=15 overflow=0 ellipsisCut=0 smallButtons=0
+MEASURE slot_cage_full: texts=30 buttons=15 overflow=0 ellipsisCut=0 smallButtons=0
+MEASURE slots_list_after: texts=18 buttons=9 overflow=0 ellipsisCut=0 smallButtons=0
+board keys (slots): feed,wash,play,adopt,delivery,slot
+care summary fontSize=14 overflowing=False text=강아지  ·  성별 미등록  ·  강아지 쿠션 1|기분: 평온해요|성체  ·  XP 0 / 65
+MEASURE pet_care_window_slot: texts=29 buttons=14 overflow=0 ellipsisCut=0 smallButtons=0
+MEASURE slots_list_after_remove: texts=14 buttons=7 overflow=0 ellipsisCut=0 smallButtons=0
+MEASURE slots_empty: texts=10 buttons=5 overflow=0 ellipsisCut=0 smallButtons=0

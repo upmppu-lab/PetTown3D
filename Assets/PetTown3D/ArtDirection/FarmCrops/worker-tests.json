@@ -1,0 +1,22 @@
+{
+  "farm_0_native_agents_on_navmesh": true,
+  "farm_0_no_completion_before_arrival": true,
+  "farm_0_unpaid_workers_pause": true,
+  "farm_0_automation_off_blocks_work": true,
+  "farm_0_all_jobs_complete": true,
+  "farm_0_no_duplicate_target_reservation": true,
+  "farm_0_farm_outputs_once": true,
+  "farm_0_farm_rewards_and_decisions": true,
+  "farm_0_next_day_crop_growth": true,
+  "farm_0_next_day_automatic_care": true,
+  "farm_90_native_agents_on_navmesh": true,
+  "farm_90_no_completion_before_arrival": true,
+  "farm_90_unpaid_workers_pause": true,
+  "farm_90_automation_off_blocks_work": true,
+  "farm_90_all_jobs_complete": true,
+  "farm_90_no_duplicate_target_reservation": true,
+  "farm_90_farm_outputs_once": true,
+  "farm_90_farm_rewards_and_decisions": true,
+  "farm_90_next_day_crop_growth": true,
+  "farm_90_next_day_automatic_care": true
+}

@@ -1,0 +1,31 @@
+{
+  "bytes": 240757025,
+  "MiB": 229.6,
+  "includedFiles": 12443,
+  "externalFiles": 289,
+  "manualAssetFolders": [
+    "3D set of stylized nature - GHIBLI style",
+    "ADG_Textures",
+    "Anime Trees",
+    "Barking_Dog",
+    "Brick Project Studio",
+    "CozyFarmAssetPack",
+    "Easy3D",
+    "FREE_VERSION_30_MODELS",
+    "Floreswa",
+    "FurnishedCabin",
+    "InnerverseInteractive",
+    "Low-Poly Medieval Market",
+    "LowPolyFarmLite",
+    "LowPolyMedievalStarterPack",
+    "Park",
+    "Playground Low Poly",
+    "Polytope Studio",
+    "Starter Assets",
+    "Stylized Nature MegaKit[Standard]",
+    "TerrainDemoScene_HDRP",
+    "ithappy"
+  ],
+  "character": "MasterPlayer",
+  "pet": "Characters/Pets/Dog_Maltese_Beige/Dog_Maltese_Beige"
+}

@@ -1,0 +1,25 @@
+{
+  "author": "Quaternius",
+  "license": "CC0",
+  "source": "https://quaternius.com/packs/farmanimal.html",
+  "files": [
+    {
+      "name": "Cow",
+      "url": "https://drive.google.com/uc?export=download&id=1ifw6UjxCw8Bsv3c6JDxpwIOz_VK8bte5",
+      "sha256": "0202789cad8c1debb8ae5b4a47d1a5d2e5f93a0875878bc0b05a80e42ae37e8d",
+      "bytes": 1044076
+    },
+    {
+      "name": "Pig",
+      "url": "https://drive.google.com/uc?export=download&id=1rdiu2AJFEbH4-n32jjOpnMKYorhpxR0G",
+      "sha256": "bdf5e149a974ffc2431546f30ea568d7c41f916d7bd87187f1532c45778a9a23",
+      "bytes": 360156
+    },
+    {
+      "name": "Sheep",
+      "url": "https://drive.google.com/uc?export=download&id=1SejVZugDFeAtIn16d_QhsvcJhBJEbKB5",
+      "sha256": "4a3fc559cc9f37e3e3f216af1dab30cb411ec9b268eb98676f1d5c18a430d33e",
+      "bytes": 356796
+    }
+  ]
+}

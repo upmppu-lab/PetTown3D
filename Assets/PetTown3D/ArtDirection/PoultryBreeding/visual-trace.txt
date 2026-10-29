@@ -1,0 +1,12 @@
+rotation_0_height hen=0.477578 rooster=0.5348873 ratio=1.12
+MEASURE rotation_0_menu_main: texts=50 buttons=25 overflow=0 ellipsisCut=0 smallButtons=0
+MEASURE rotation_0_menu_breeding: texts=18 buttons=9 overflow=0 ellipsisCut=0 smallButtons=0
+MEASURE rotation_0_menu_partner: texts=14 buttons=7 overflow=0 ellipsisCut=0 smallButtons=0
+MEASURE rotation_0_menu_breeding_clutch: texts=22 buttons=11 overflow=0 ellipsisCut=0 smallButtons=0
+MEASURE rotation_0_menu_bird_detail: texts=14 buttons=7 overflow=0 ellipsisCut=0 smallButtons=0
+rotation_90_height hen=0.477578 rooster=0.5348873 ratio=1.12
+MEASURE rotation_90_menu_main: texts=50 buttons=25 overflow=0 ellipsisCut=0 smallButtons=0
+MEASURE rotation_90_menu_breeding: texts=18 buttons=9 overflow=0 ellipsisCut=0 smallButtons=0
+MEASURE rotation_90_menu_partner: texts=14 buttons=7 overflow=0 ellipsisCut=0 smallButtons=0
+MEASURE rotation_90_menu_breeding_clutch: texts=22 buttons=11 overflow=0 ellipsisCut=0 smallButtons=0
+MEASURE rotation_90_menu_bird_detail: texts=14 buttons=7 overflow=0 ellipsisCut=0 smallButtons=0

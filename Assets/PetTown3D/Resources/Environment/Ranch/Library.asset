@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5395f9e3ee642f94095b1ee7b94f6d36, type: 3}
+  m_Name: Library
+  m_EditorClassIdentifier: Assembly-CSharp::PetTownRanchLibrary
+  animals:
+  - prefab: {fileID: 919132149155446097, guid: a94d122e6dc46f94581372452afc888e, type: 3}
+    idle: {fileID: -8945691123924629249, guid: a94d122e6dc46f94581372452afc888e, type: 3}
+    walk: {fileID: -8757025533558806094, guid: a94d122e6dc46f94581372452afc888e, type: 3}
+    height: 1.45
+    portrait: {fileID: 2800000, guid: 2fb29a53186d3a4409cba3445de3ec76, type: 3}
+  - prefab: {fileID: 919132149155446097, guid: 783f50cdaa56ced429a709c19a3cd6fb, type: 3}
+    idle: {fileID: -8945691123924629249, guid: 783f50cdaa56ced429a709c19a3cd6fb, type: 3}
+    walk: {fileID: -8757025533558806094, guid: a94d122e6dc46f94581372452afc888e, type: 3}
+    height: 0.85
+    portrait: {fileID: 2800000, guid: 7e63a257571b6e44e9269b1e4afcd4e4, type: 3}
+  - prefab: {fileID: 919132149155446097, guid: 7ee250ef6385bbd4c83d5d2cef039ab7, type: 3}
+    idle: {fileID: -8945691123924629249, guid: 7ee250ef6385bbd4c83d5d2cef039ab7, type: 3}
+    walk: {fileID: -8757025533558806094, guid: a94d122e6dc46f94581372452afc888e, type: 3}
+    height: 0.8
+    portrait: {fileID: 2800000, guid: 89115311e4cdb4b40b39caed685d5064, type: 3}
+  thumbnail: {fileID: 2800000, guid: 75c1deb96520542418761a085ab68d7f, type: 3}

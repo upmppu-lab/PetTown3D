@@ -1,0 +1,103 @@
+{
+  "breeding_list": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "breeding_detail_-1": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "breeding_detail_-2": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "breeding_detail_0": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "breeding_detail_-3": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "pending_list": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "pending_detail": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "actual_ui_cancel_preserves_rest": true,
+  "parents_list": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "parent_detail_0": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "parent_detail_1": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "parent_detail_2": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "parent_detail_3": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "parent_detail_4": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "parent_detail_5": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "animal_list": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "animal_detail_0": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "animal_detail_1": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "animal_detail_2": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "purchase_list": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "purchase_detail_1": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "purchase_detail_2": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "purchase_detail_-1": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "empty_history_list": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "empty_history_detail": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "ranch_list": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  }
+}

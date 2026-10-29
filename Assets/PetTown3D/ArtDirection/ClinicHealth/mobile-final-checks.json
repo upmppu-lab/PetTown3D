@@ -1,0 +1,61 @@
+{
+  "patient_list": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "patient_detail_0": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "patient_detail_1": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "patient_detail_2": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "patient_detail_3": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "patient_detail_-2": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "hospital_list": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "hospital_detail_-11": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "hospital_detail_-12": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "hospital_detail_-3": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "hospital_detail_-4": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "actualUIAdmitted": true,
+  "actualUIEnabledTreatment": true,
+  "health_list": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "actualResidentHealthLink": true,
+  "health_detail": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  },
+  "clinic_choice_list": {
+    "overflow": [],
+    "buttonsBelow44": 0
+  }
+}

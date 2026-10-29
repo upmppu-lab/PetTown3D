@@ -1,0 +1,13 @@
+{
+  "patches": 243,
+  "batchRenderers": 2,
+  "vertices": 53884,
+  "nativeMaterials": [
+    "Grass_03_23a7c21d_CommunityMeadow",
+    "Grass_02_7e42dceb_CommunityMeadow"
+  ],
+  "materialShaders": [
+    "PetTown/Review/LivingGrass",
+    "PetTown/Review/LivingGrass"
+  ]
+}

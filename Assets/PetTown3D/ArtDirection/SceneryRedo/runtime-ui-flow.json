@@ -1,0 +1,12 @@
+{
+  "buyCowAndSheep": true,
+  "foodWaterOnce": true,
+  "youngGrowthDayOne": true,
+  "adultDayTwo": true,
+  "milkFirstThenWool": true,
+  "milkCollectNoDuplicate": true,
+  "woolCollectNoDuplicate": true,
+  "saleBothProducts": true,
+  "nativeModels": true,
+  "originalSaveUntouched": true
+}

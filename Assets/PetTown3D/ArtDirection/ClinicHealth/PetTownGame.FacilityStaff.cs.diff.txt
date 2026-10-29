@@ -1,0 +1,11 @@
+--- before/PetTownGame.FacilityStaff.cs
++++ after/PetTownGame.FacilityStaff.cs
+@@ -93,7 +93,7 @@
+                 string reason;if(!Progression.Facilities.BeginWithStaff(v.id,p,out reason)){a.status=reason;CancelEmployeeJob(a);return;}
+                 a.facilityStarted=true;SaveFacilityStaffProgress();
+             }
+-            a.status=(v.kind==3?"조리 중 ":"예방검진 중 ")+Mathf.CeilToInt(v.remaining)+"초";
++            a.status=(v.kind==3?"조리 중 ":PetTownClinic.ServiceName(v.clinicService)+" 중 ")+Mathf.CeilToInt(v.remaining)+"초";
+         }
+         else
+         {

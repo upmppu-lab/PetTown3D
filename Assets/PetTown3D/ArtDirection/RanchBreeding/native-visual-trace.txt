@@ -1,0 +1,6 @@
+rotation_0_돼지 height 0.3599854 -> 0.7999573
+rotation_0_양 height 0.3825073 -> 0.8500366
+rotation_0_젖소 height 0.6524658 -> 1.442596
+rotation_90_돼지 height 0.3599854 -> 0.7999878
+rotation_90_양 height 0.3825073 -> 0.8500366
+rotation_90_젖소 height 0.6524963 -> 1.449646

@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bab14f75410d8b428e10863d85751c6, type: 3}
+  m_Name: Library
+  m_EditorClassIdentifier: Assembly-CSharp::PetTownCommunityLibrary
+  grass: {fileID: 116584, guid: 96b62898125915e4892dc72bd9f4e420, type: 3}
+  path: {fileID: 175928, guid: 4089d53e61f85f84a8a4830925f5dbeb, type: 3}
+  bench: {fileID: 106578, guid: ccf13c7381ca25349b107bbb9423e1bd, type: 3}
+  fountain: {fileID: 359427174322068275, guid: 82b6c1f52011df54da2417714f0fe8f7, type: 3}
+  lamp: {fileID: 198732, guid: 4eef6f5ff5915b4458bd1d4a4f7b261a, type: 3}
+  fence: {fileID: 150202, guid: a5eed1cf4e0dbcb44a9092a7ba5e87c7, type: 3}
+  flowers: {fileID: 6671043772708848929, guid: f9efa1bcc0fbfd84daad3940fe436d4c, type: 3}
+  rock: {fileID: 6448528558158443775, guid: 80ef0e7e48bd2f343a7c61ab978bf48d, type: 3}
+  stonePathMaterial: {fileID: 2100000, guid: 5d7fe64e3a45a9f43830dbd229f12893, type: 2}
+  stonePathHeight: {fileID: 2800000, guid: 105c23eafdd3fe442a71deb8879e26c2, type: 3}
+  meadowPatches:
+  - {fileID: 2418192591803468798, guid: db80efa36d1f7d3499293659d7909525, type: 3}
+  - {fileID: 8696179997195622315, guid: 624e647daa0136541bcf1cc6f97a75ce, type: 3}
+  zooShelter: {fileID: 4718795350722904591, guid: 0cc99b4558b2a31459d3b381baa87731, type: 3}
+  zooHayRack: {fileID: 2700189887663215805, guid: 83a3ed3e9b766c440895cdaf0093704e, type: 3}
+  zooEnrichment: {fileID: 5693017198600890280, guid: b6647811961a1fd498a0d82278489092, type: 3}
+  zooRail: {fileID: 6098017303841692541, guid: 169d25065b7d08e449754d3305747e7e, type: 3}
+  zooCliff: {fileID: 1972063184172140350, guid: a3ddf82489c047d4c870462246e394ba, type: 3}
+  animals:
+  - prefab: {fileID: 7402009758359158996, guid: 4ecab060b0afb5d4db61f7f1311b9e24, type: 3}
+    idle: {fileID: -8225529781148070140, guid: f612768321ebc364fa742fa8bbfadb5e, type: 3}
+    walk: {fileID: 7400000, guid: 3264f521eed7f824f8d725deb24b4418, type: 2}
+    height: 1.5
+  - prefab: {fileID: 5883155896844355918, guid: 8741cd6c8b9fc3947999191d0c381f50, type: 3}
+    idle: {fileID: 6924978364344556004, guid: 8739604ff156c91408e3f6352de03dbc, type: 3}
+    walk: {fileID: 7400000, guid: 6922d6a93060d7547a659edc79fedf1b, type: 2}
+    height: 1.1
+  - prefab: {fileID: 1527881004230699645, guid: 66f01a8db88f9644baed659d1f91cdca, type: 3}
+    idle: {fileID: 8645524530206521729, guid: a2ef474392ac74f409c70c61ccb6c24a, type: 3}
+    walk: {fileID: 7400000, guid: e700b568f84eddf44833ed126c4a4db9, type: 2}
+    height: 0.65
+  - prefab: {fileID: 1091781310940315404, guid: 87a4094e46e235c4d91a8ac274149146, type: 3}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    height: 2.35
+  - prefab: {fileID: 6388213921849758687, guid: ee08e9cc0fb2c2b44b8585ff553069c9, type: 3}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    height: 3.15
+  - prefab: {fileID: 2518446478734750826, guid: 1e93f232f983ab64dba2a4a6af50623b, type: 3}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    height: 1.35
+  thumbnails:
+  - {fileID: 2800000, guid: 89c43a83ceb91ca49b50b1e738f7a250, type: 3}
+  - {fileID: 2800000, guid: fa89bde07a6ad2940abc45fedb0f7e23, type: 3}
+  - {fileID: 2800000, guid: c228d2bd18c979844a1074dd6b989e67, type: 3}
+  playground:
+  - {fileID: 4207457694302367893, guid: 7a9b12c91eb11314eb8dbbeeb81b7593, type: 3}
+  - {fileID: 7690065063643396277, guid: 16d4c257c40500540bf530cf3ca1ae27, type: 3}
+  - {fileID: 207510570429624245, guid: 9fc0d344e6ba1574183600c17ba78f3b, type: 3}
+  - {fileID: 7093660499286963764, guid: ee3d910545b206946a646dfdbb9b8c71, type: 3}
+  playgroundMaterial: {fileID: 2100000, guid: c64d5f34020bc6142950e9942bfb2362, type: 2}
+  playgroundSandMaterial: {fileID: 2100000, guid: 4db4cec4826f71141b57eba5dcf33bfc, type: 2}
+  fishingRod: {fileID: 7999026169786378620, guid: e9049a62eb2ccd64ebfa56bb242c76b6, type: 3}

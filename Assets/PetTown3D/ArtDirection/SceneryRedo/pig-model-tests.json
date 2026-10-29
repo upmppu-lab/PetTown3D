@@ -1,0 +1,16 @@
+{
+  "pigPurchase150": true,
+  "babyCannotShip": true,
+  "youngCannotShip": true,
+  "adultAfterCare": true,
+  "noPassiveMeat": true,
+  "fullBagKeepsPig": true,
+  "shipmentConsumesOnlySelected": true,
+  "shipmentCannotDuplicate": true,
+  "meatSale225": true,
+  "cowCannotShip": true,
+  "pigCapacity3": true,
+  "oldProductsPreserved": true,
+  "pigIDsPersist": true,
+  "meatQuest": true
+}

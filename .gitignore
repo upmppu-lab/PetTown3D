@@ -32,3 +32,30 @@
 .DS_Store
 Thumbs.db
 /BACKUP/
+
+# Store originals are installed locally for this lightweight branch.
+/Assets/3D set of stylized nature - GHIBLI style/
+/Assets/ADG_Textures/
+/Assets/Anime Trees/
+/Assets/Barking_Dog/
+/Assets/Brick Project Studio/
+/Assets/CozyFarmAssetPack/
+/Assets/Easy3D/
+/Assets/FREE_VERSION_30_MODELS/
+/Assets/Floreswa/
+/Assets/FurnishedCabin/
+/Assets/InnerverseInteractive/
+/Assets/Low-Poly Medieval Market/
+/Assets/LowPolyFarmLite/
+/Assets/LowPolyMedievalStarterPack/
+/Assets/Park/
+/Assets/Playground Low Poly/
+/Assets/Polytope Studio/
+/Assets/Starter Assets/
+/Assets/Stylized Nature MegaKit\[Standard\]/
+/Assets/TerrainDemoScene_HDRP/
+/Assets/ithappy/
+/*.zip
+/*.egg
+/Assets/*.zip
+/Assets/*.egg

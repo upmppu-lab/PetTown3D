@@ -1,0 +1,8 @@
+{
+  "Assets/PetTown3D/Scenes/PetTown3D_CharacterTest.unity": true,
+  "Assets/PetTown3D/Scripts/PetTownGame.cs": true,
+  "Assets/PetTown3D/Scripts/PetTownPlayerControls.cs": true,
+  "Assets/PetTown3D/Scripts/PetTownUITheme.cs": true,
+  "Assets/PetTown3D/Scripts/PetTownVisualGrounding.cs": true,
+  "Assets/PetTown3D/Scripts/PetTownGame.Companions.cs": true
+}

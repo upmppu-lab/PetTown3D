@@ -1,0 +1,20 @@
+--- before/PetTownGame.Facilities.cs
++++ after/PetTownGame.Facilities.cs
+@@ -49,7 +49,7 @@
+         if(Time.unscaledTime<nextFacilityGuest)return;nextFacilityGuest=Time.unscaledTime+30;
+         foreach(var room in facilityRooms)
+         {
+-            if(!room)continue;var business=state.Get(room.Id,room.Kind);if(!business.open||!business.automatic||state.Stock(room.Kind)<=0)continue;
++            if(!room)continue;var business=state.Get(room.Id,room.Kind);if(!business.open||!business.automatic||state.AvailableFor(business)<=0)continue;
+             foreach(var person in EnsureResidents().people)
+             {
+                 bool accepted=false;foreach(var pet in person.pets){string reason;if(TryAdmitFacility(room,person.id,pet.id,out reason)){accepted=true;break;}}if(accepted)break;
+@@ -65,7 +65,7 @@
+         var state=Progression.Facilities;var owner=EnsureResidents().people.Find(p=>p.id==residentId);var pet=owner?.pets.Find(p=>p.id==petId);
+         if(pet==null){reason="펫과 함께 사는 주민을 선택해 주세요.";return false;}
+         if((room.Kind==3?pet.lastCafeDay:pet.lastCheckupDay)==day||state.visits.Exists(v=>v.residentId==residentId)){reason="오늘 이미 이용했거나 다른 방문을 진행 중이에요.";return false;}
+-        if(!state.Get(room.Id,room.Kind).open||state.AvailableSupplies(room.Kind)<=0){reason="영업 상태와 예약 가능한 소모품을 확인해 주세요.";return false;}
++        if(!state.Get(room.Id,room.Kind).open||state.AvailableFor(state.Get(room.Id,room.Kind))<=0){reason="영업 상태와 예약 가능한 소모품을 확인해 주세요.";return false;}
+         var counter=FacilityCounter(room);var tables=FacilityTables(room);if(!counter||tables.Count==0){reason="시설 안에 계산대와 원목 또는 낮은 테이블을 설치해 주세요.";return false;}
+         if(state.visits.FindAll(v=>v.buildingId==room.Id).Count>=Mathf.Min(4,tables.Count)){reason="현재 이용 중인 자리가 모두 찼어요.";return false;}
+         foreach(var table in tables)

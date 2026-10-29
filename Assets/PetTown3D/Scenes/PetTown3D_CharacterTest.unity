@@ -148,6 +148,105 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eac5192b62b573544ab8925ce59c221d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PetTownGame
+  WorldSize: 440
+  constructionGridSize: 1
+  constructionGridOrigin: {x: 0, y: 0}
+  constructionGridRadius: 12
+  constructionRoadAlignment: 1
+  roadMode: 0
+  constructionDefinitions:
+  - kind: 0
+    label: Pet Shop
+    footprintMeters: {x: 15, y: 15}
+    hasEntrance: 1
+    entranceLocal: {x: 0, y: 0.12, z: -7.5}
+    entranceBaseYaw: 180
+    modelYawCorrection: 0
+    variantModelYawCorrections: []
+    variantEntranceLocalOverrides: []
+  - kind: 1
+    label: Home
+    footprintMeters: {x: 11, y: 10}
+    hasEntrance: 1
+    entranceLocal: {x: 0, y: 0.4, z: -5}
+    entranceBaseYaw: 180
+    modelYawCorrection: 0
+    variantModelYawCorrections: []
+    variantEntranceLocalOverrides: []
+  - kind: 2
+    label: Resident House
+    footprintMeters: {x: 7, y: 7}
+    hasEntrance: 1
+    entranceLocal: {x: 0, y: 0, z: -3.5}
+    entranceBaseYaw: 180
+    modelYawCorrection: 180
+    variantModelYawCorrections: []
+    variantEntranceLocalOverrides: []
+  - kind: 3
+    label: Pet Cafe
+    footprintMeters: {x: 11, y: 10}
+    hasEntrance: 1
+    entranceLocal: {x: 0, y: 0.4, z: -5}
+    entranceBaseYaw: 180
+    modelYawCorrection: 0
+    variantModelYawCorrections: []
+    variantEntranceLocalOverrides: []
+  - kind: 4
+    label: Pet Hospital
+    footprintMeters: {x: 11, y: 10}
+    hasEntrance: 1
+    entranceLocal: {x: 0, y: 0.4, z: -5}
+    entranceBaseYaw: 180
+    modelYawCorrection: 0
+    variantModelYawCorrections: []
+    variantEntranceLocalOverrides: []
+  - kind: 5
+    label: Park
+    footprintMeters: {x: 15, y: 15}
+    hasEntrance: 1
+    entranceLocal: {x: 0, y: 0, z: -7.5}
+    entranceBaseYaw: 180
+    modelYawCorrection: 0
+    variantModelYawCorrections: []
+    variantEntranceLocalOverrides: []
+  - kind: 6
+    label: Lake
+    footprintMeters: {x: 15, y: 15}
+    hasEntrance: 1
+    entranceLocal: {x: 0, y: 0, z: -7.5}
+    entranceBaseYaw: 180
+    modelYawCorrection: 0
+    variantModelYawCorrections: []
+    variantEntranceLocalOverrides: []
+  - kind: 7
+    label: Zoo
+    footprintMeters: {x: 22, y: 22}
+    hasEntrance: 1
+    entranceLocal: {x: 0, y: 0, z: -11}
+    entranceBaseYaw: 180
+    modelYawCorrection: 0
+    variantModelYawCorrections: []
+    variantEntranceLocalOverrides: []
+  constructionRoadSearchDistance: 16
+  useNewConstructionCatalog: 1
+  useNewFurnitureCatalog: 1
+  useNewManagementUI: 1
+  furnitureGridSize: 0.5
+  useNaturalEnvironment: 1
+  expansionSettings:
+    moduleDepth: 3
+    shopGoldPerSquareMeter: 20
+    cafeGoldPerSquareMeter: 24
+    hospitalGoldPerSquareMeter: 28
+    maximumSpan: 45
+  constructionSafety:
+    maxSlope: 18
+    maxHeightRange: 2
+    minimumPassageWidth: 1.2
+    entranceDepth: 2
+    roadGap: 2.5
+    checkNavigation: 1
+  useKenneyHud: 1
 --- !u!4 &867827719
 Transform:
   m_ObjectHideFlags: 0

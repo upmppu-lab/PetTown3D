@@ -1,0 +1,13 @@
+frames=4663 realtime=14s timeScale=5 focused=True
+젖소♀: travelled=29.25m sawWalk=True height idle=1.88 range=1.88~1.88 feetBelowRoot=-0.02 feetMax=0.01 penOvershoot=0.00m penHalf=(3.4, 7.2) penCenter=(-6.4, 0.0, 2.0)
+   baked: idleHeight=1.45 lowestRange=-0.003~0.004 topRange=1.43~1.46 libraryHeight=1.45
+젖소♂: travelled=24.27m sawWalk=True height idle=1.88 range=1.88~1.88 feetBelowRoot=-0.02 feetMax=0.01 penOvershoot=0.00m penHalf=(3.4, 7.2) penCenter=(-6.4, 0.0, 2.0)
+   baked: idleHeight=1.45 lowestRange=-0.003~0.004 topRange=1.43~1.46 libraryHeight=1.45
+양♀: travelled=24.11m sawWalk=True height idle=1.01 range=1.01~1.01 feetBelowRoot=-0.02 feetMax=-0.01 penOvershoot=0.00m penHalf=(3.4, 3.6) penCenter=(6.4, 0.0, 5.6)
+   baked: idleHeight=0.85 lowestRange=-0.006~0.004 topRange=0.80~0.85 libraryHeight=0.85
+양♂: travelled=19.27m sawWalk=True height idle=1.01 range=1.01~1.01 feetBelowRoot=-0.02 feetMax=0.00 penOvershoot=0.00m penHalf=(3.4, 3.6) penCenter=(6.4, 0.0, 5.6)
+   baked: idleHeight=0.85 lowestRange=-0.006~0.004 topRange=0.80~0.85 libraryHeight=0.85
+돼지♀: travelled=19.80m sawWalk=True height idle=1.00 range=1.00~1.00 feetBelowRoot=-0.03 feetMax=-0.02 penOvershoot=0.00m penHalf=(3.4, 3.3) penCenter=(6.4, 0.0, -1.9)
+   baked: idleHeight=0.80 lowestRange=-0.003~0.002 topRange=0.80~0.86 libraryHeight=0.80
+돼지♂: travelled=18.77m sawWalk=True height idle=1.00 range=1.00~1.00 feetBelowRoot=-0.03 feetMax=-0.02 penOvershoot=0.00m penHalf=(3.4, 3.3) penCenter=(6.4, 0.0, -1.9)
+   baked: idleHeight=0.80 lowestRange=-0.003~0.002 topRange=0.80~0.86 libraryHeight=0.80

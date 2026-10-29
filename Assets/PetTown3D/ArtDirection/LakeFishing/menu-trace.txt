@@ -1,0 +1,4 @@
+MEASURE lake_menu: texts=30 buttons=15 overflow=0 ellipsisCut=0 smallButtons=0
+MEASURE lake_menu_after: texts=30 buttons=15 overflow=0 ellipsisCut=0 smallButtons=0
+MEASURE park_menu: texts=22 buttons=11 overflow=0 ellipsisCut=0 smallButtons=0
+board keys (lake): feed,wash,play,adopt,delivery,fish

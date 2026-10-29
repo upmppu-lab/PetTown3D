@@ -1,0 +1,13 @@
+{
+  "playing": false,
+  "compiling": false,
+  "sceneDirty": false,
+  "qaObjects": 0,
+  "sceneryLibrary": true,
+  "ranchLibraryReady": true,
+  "shaderSupported": true,
+  "shaderMessages": 0,
+  "consoleErrors": 0,
+  "warnings": "Existing obsolete Unity API warnings remain.",
+  "mobileDeviceTested": false
+}

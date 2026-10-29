@@ -1,0 +1,40 @@
+clinic_0_Entrance owner=(1000.00, 300.00, 991.00) pet=(999.00, 300.00, 991.00) stock=3 remaining=0
+clinic_0_Reception owner=(1000.00, 300.00, 992.00) pet=(1000.00, 300.00, 990.90) stock=3 remaining=0
+clinic_0_Registering owner=(999.00, 300.00, 996.30) pet=(999.40, 300.00, 995.18) stock=3 remaining=4.5
+clinic_0_ToWork owner=(999.00, 300.00, 996.30) pet=(999.21, 300.00, 995.42) stock=3 remaining=0
+clinic_0_Waiting owner=(1003.00, 300.00, 1000.00) pet=(1002.13, 300.00, 999.08) stock=3 remaining=0
+clinic_0_Working owner=(1003.00, 300.00, 1000.00) pet=(994.00, 300.00, 994.00) stock=2 remaining=10
+clinic_0_ToPay owner=(1003.00, 300.00, 1000.00) pet=(1002.37, 300.00, 999.36) stock=2 remaining=0
+clinic_0_Payment owner=(999.00, 300.00, 996.30) pet=(999.68, 300.00, 996.53) stock=2 remaining=0
+clinic_0_Leaving owner=(999.00, 300.00, 996.30) pet=(999.72, 300.00, 996.84) stock=2 remaining=0
+END no visit phase=9
+clinic_1_Entrance owner=(991.00, 300.00, 1000.00) pet=(991.00, 300.00, 1001.00) stock=3 remaining=0
+clinic_1_Reception owner=(992.00, 300.00, 1000.00) pet=(991.07, 300.00, 1000.32) stock=3 remaining=0
+clinic_1_Registering owner=(999.20, 300.00, 1002.20) pet=(998.13, 300.00, 1002.64) stock=3 remaining=4.5
+clinic_1_ToWork owner=(999.20, 300.00, 1002.20) pet=(998.42, 300.00, 1002.64) stock=3 remaining=0
+clinic_1_Waiting owner=(1002.90, 300.00, 998.20) pet=(1002.03, 300.00, 999.13) stock=3 remaining=0
+clinic_1_Working owner=(1002.90, 300.00, 998.20) pet=(994.00, 300.00, 1006.00) stock=2 remaining=10
+clinic_1_ToPay owner=(1002.90, 300.00, 998.20) pet=(1002.29, 300.00, 998.86) stock=2 remaining=0
+clinic_1_Payment owner=(999.20, 300.00, 1002.20) pet=(999.83, 300.00, 1001.85) stock=2 remaining=0
+clinic_1_Leaving owner=(999.20, 300.00, 1002.20) pet=(999.81, 300.00, 1001.54) stock=2 remaining=0
+END no visit phase=9
+clinic_2_Entrance owner=(1000.00, 300.00, 991.00) pet=(999.00, 300.00, 991.00) stock=3 remaining=0
+clinic_2_Reception owner=(1000.00, 300.00, 992.00) pet=(999.69, 300.00, 991.07) stock=3 remaining=0
+clinic_2_Registering owner=(997.80, 300.00, 999.20) pet=(997.36, 300.00, 998.40) stock=3 remaining=4.5
+clinic_2_ToWork owner=(997.80, 300.00, 999.20) pet=(997.36, 300.00, 998.40) stock=3 remaining=0
+clinic_2_Waiting owner=(1001.80, 300.00, 1002.90) pet=(1000.88, 300.00, 1002.02) stock=3 remaining=0
+clinic_2_Working owner=(1001.80, 300.00, 1002.90) pet=(994.00, 300.00, 994.00) stock=1 remaining=16
+clinic_2_ToPay owner=(1001.80, 300.00, 1002.90) pet=(1001.14, 300.00, 1002.29) stock=1 remaining=0
+clinic_2_Payment owner=(997.80, 300.00, 999.20) pet=(998.60, 300.00, 999.53) stock=1 remaining=0
+clinic_2_Leaving owner=(997.80, 300.00, 999.20) pet=(998.46, 300.00, 999.81) stock=1 remaining=0
+END no visit phase=9
+cafe_Entrance owner=(1000.00, 300.00, 991.00) pet=(999.00, 300.00, 991.00) stock=3 remaining=0
+cafe_Reception owner=(1000.00, 300.00, 992.00) pet=(999.69, 300.00, 991.07) stock=3 remaining=0
+cafe_Waiting owner=(997.30, 300.00, 998.00) pet=(997.66, 300.00, 996.83) stock=3 remaining=0
+cafe_Working owner=(997.30, 300.00, 998.00) pet=(994.00, 300.00, 994.00) stock=2 remaining=8
+cafe_ToWork owner=(997.30, 300.00, 998.00) pet=(997.48, 300.00, 997.12) stock=2 remaining=0
+cafe_Eating owner=(1001.30, 300.00, 1001.70) pet=(1000.68, 300.00, 1000.84) stock=2 remaining=12
+cafe_ToPay owner=(1001.30, 300.00, 1001.70) pet=(1000.59, 300.00, 1001.15) stock=2 remaining=0
+cafe_Payment owner=(997.30, 300.00, 998.01) pet=(997.33, 300.00, 998.93) stock=2 remaining=0
+cafe_Leaving owner=(997.30, 300.00, 998.00) pet=(997.64, 300.00, 998.93) stock=2 remaining=0
+END no visit phase=9

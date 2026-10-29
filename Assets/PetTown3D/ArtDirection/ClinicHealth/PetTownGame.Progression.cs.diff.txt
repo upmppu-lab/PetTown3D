@@ -1,0 +1,11 @@
+--- before/PetTownGame.Progression.cs
++++ after/PetTownGame.Progression.cs
+@@ -31,7 +31,7 @@
+     }
+     void OnApplicationPause(bool pause){if(pause&&progression!=null&&progressionDirty)SaveProgressionSilent();}
+     void OnApplicationQuit(){if(progression!=null&&progressionDirty)SaveProgressionSilent();}
+-    void ProgressionNewDay(){ResidentsNewDay();OperationsNewDay();FarmNewDay();RanchNewDay();if(Progression.community!=null)Progression.community.AdvanceDay(day);Progression.serviceHappiness*=.6f;progressionDirty=true;}
++    void ProgressionNewDay(){ResidentsNewDay();PetTownClinic.AdvanceDay(Progression,day);OperationsNewDay();FarmNewDay();RanchNewDay();if(Progression.community!=null)Progression.community.AdvanceDay(day);Progression.serviceHappiness*=.6f;progressionDirty=true;}
+     int FoodLine(PetTownPetCareRecord p)=>Mathf.Clamp(p.speciesKind,0,3);
+     string FoodDescription(PetTownPetCareRecord p){int kind=FoodLine(p);return PetTownProgressionState.Species[kind]+" 기본 사료  "+Progression.food[kind]+"개";}
+     void BuyCareFood(PetTownPetCareRecord pet)

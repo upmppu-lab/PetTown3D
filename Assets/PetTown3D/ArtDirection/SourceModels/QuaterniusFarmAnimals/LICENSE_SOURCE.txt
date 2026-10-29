@@ -1,0 +1,8 @@
+Quaternius Farm Animal Pack
+Creator: Quaternius
+License: CC0 1.0 (public domain dedication)
+Official source: https://quaternius.com/packs/farmanimal.html
+License URL: https://creativecommons.org/publicdomain/zero/1.0/
+Downloaded 2026-10-26 from the public Google Drive folder linked by the creator.
+Personal and commercial use allowed.
+Only Cow, Pig and Sheep FBX copied; source URLs and SHA-256 values are in SOURCE.json.

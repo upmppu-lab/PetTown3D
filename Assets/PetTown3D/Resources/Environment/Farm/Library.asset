@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50587f02e4a8f8d46a7391b740524a6a, type: 3}
+  m_Name: Library
+  m_EditorClassIdentifier: Assembly-CSharp::PetTownFarmLibrary
+  soil: {fileID: 8209775890509911002, guid: c4fa87cd4eff4ae4ba4c8d1ad48df5f7, type: 3}
+  cabbage: {fileID: 8554979865545778643, guid: aec8969d0290c6d4cbc587ef85a01ce4, type: 3}
+  tomato: {fileID: 2906742830765859135, guid: 78da2ace1ab76ce478600ebe37fa10fe, type: 3}
+  fence: {fileID: 3008297296414033687, guid: cb422acdc199d6e42910f589b81c283b, type: 3}
+  barn: {fileID: 6379937049707072066, guid: d4d4291441c882d44a25035f11a8493f, type: 3}
+  crate: {fileID: 4151725995839062632, guid: d26dc1241d332c342b898a57f1164932, type: 3}
+  wateringCan: {fileID: 3928642541961935006, guid: 8877f4aac7d3c184ea4954647487e084, type: 3}
+  carrot: {fileID: -8903435023650923721, guid: 3656439569297a848bd8caf8e8abe6e3, type: 3}
+  corn: {fileID: -6569304847485161275, guid: 7fb5b8344fd3e8c4785da510c80efb1a, type: 3}
+  wheat: {fileID: -1895751040323123547, guid: 20b78c73720a12c4882692c1430c40ec, type: 3}
+  pumpkin: {fileID: -780504395670503867, guid: 875ddf38fdeba4d458e08608ca6a0d78, type: 3}
+  potato: {fileID: 6758561889708201982, guid: 40fc4a729ccf8aa4d98426ae7f288b3e, type: 3}
+  thumbnail: {fileID: 2800000, guid: 81dfef11234458047a4fbb80b6a37ded, type: 3}
+  cropIcons:
+  - {fileID: 2800000, guid: 8d42faa3175813d4bb256676f8f6bf3e, type: 3}
+  - {fileID: 2800000, guid: 6b313a5fbe1bab7478ae40ecefa4d08f, type: 3}
+  - {fileID: 2800000, guid: a89612385b21e0845aecf2da1089be4e, type: 3}
+  - {fileID: 2800000, guid: 692fed3791609f44a94c54c7c49d112f, type: 3}
+  - {fileID: 2800000, guid: 140fdb0f8f706984cadda21b84e18bf3, type: 3}
+  - {fileID: 2800000, guid: bc549784e8d6152469444012ca22e8e5, type: 3}
+  - {fileID: 2800000, guid: 7dcb82ed4bde0aa44953aef1d33213bc, type: 3}

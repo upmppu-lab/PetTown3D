@@ -1,0 +1,12 @@
+--- before/PetTownCozyCatalogView.cs
++++ after/PetTownCozyCatalogView.cs
+@@ -139,7 +139,8 @@
+     {
+         float w=window.Body.rect.width,y=0;PetTownMobileWindow.At(nameLabel.rectTransform,2,y,w-4,32);y+=38;
+         bool art=selected!=null&&!selected.TextOnlyDetail;largeSlot.gameObject.SetActive(art);if(art){PetTownMobileWindow.At(largeSlot,20,y,w-40,116);y+=126;}
+-        PetTownMobileWindow.At(price.rectTransform,3,y,w-6,28);y+=32;PetTownMobileWindow.At(size.rectTransform,3,y,w-6,30);y+=34;
++        float priceHeight=Mathf.Max(28,price.GetPreferredValues(price.text,w-6,0).y+4);
++        PetTownMobileWindow.At(price.rectTransform,3,y,w-6,priceHeight);y+=priceHeight+4;PetTownMobileWindow.At(size.rectTransform,3,y,w-6,30);y+=34;
+         float h=Mathf.Max(48,description.GetPreferredValues(description.text,w-12,0).y+10);PetTownMobileWindow.At(description.rectTransform,6,y,w-12,h);detailContent.sizeDelta=new Vector2(0,y+h+12);window.SetHeight(y+h+184);
+     }
+     void Update(){TextEntryFocused=IsOpen&&search.isFocused;if(!IsOpen)return;if(Input.GetKeyDown(KeyCode.Escape)){if(search.isFocused)search.DeactivateInputField();else BackToList();}if(PetTownCustomizationUI.IsCharacterWindowOpen)Cancel();}

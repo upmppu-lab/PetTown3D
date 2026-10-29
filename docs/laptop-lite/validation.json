@@ -1,0 +1,10 @@
+{
+  "character": "MasterPlayer (shared with residents and staff)",
+  "pet": "Dog_Maltese_Beige",
+  "files": 12193,
+  "sizeMiB": 230.37,
+  "filesOver100MiB": [],
+  "runtimeCompilation": "passed using Unity 6000.6.6f1 compiler and existing local package/Asset Store dependencies; obsolete API warnings",
+  "fullUnityImportAndPlay": "not tested; manual Asset Store restoration required",
+  "excludedCharacterVariantsVerified": true
+}

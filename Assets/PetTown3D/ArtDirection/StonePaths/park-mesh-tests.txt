@@ -1,0 +1,5 @@
+area union has no duplicate paving:True
+one stone path renderer:True
+constant metre UV scale:True
+stone paving stays outside lake safety box:True
+uses owned albedo and normal:True

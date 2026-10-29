@@ -1,0 +1,40 @@
+--- before/PetTownGame.FacilityUI.cs
++++ after/PetTownGame.FacilityUI.cs
+@@ -23,16 +23,17 @@
+             OperationsEntry(-6,"결제 기록",b.served+"건 · "+b.income.ToString("N0")+" 골드","이 시설의 실제 수납 내역","기록 보기","최근50건의 시설 결제 내역을 보관합니다.",8)};
+         var staffToggle=OperationsEntry(-8,b.staffService?"직원 자동 업무 끄기":"직원 자동 업무 켜기",b.staffService?"배치 직원이 조리·검진·수납":"직접 서비스 진행",FacilityStaffSummary(id),"전환하기","요리사/수의사와 계산 담당을 따로 배치해 주세요. 주민·펫·직원이 실제 도착한 뒤 작업하며 재료는 자동 구매하지 않습니다. 끄면 진행 중인 직원 업무는 대기하며 방문 관리에서 직접 이어갈 수 있어요.",5);staffToggle.SizeProvider=()=>FacilityStaffSummary(id);entries.Add(staffToggle);
+         entries.Add(OperationsEntry(-9,"시설 직원 배치",FacilityStaffSummary(id),kind==3?"카페 요리사·계산 담당":"수의사·계산 담당","직원 선택","직원 한 명은 한 시설에만 배치됩니다. 휴무·미지급 급여와 실제 이동 경로를 확인합니다.",5));
++        if(kind==3)entries.Add(OperationsEntry(-10,"카페 메뉴·레시피",PetTownCafeRecipes.Name(b.cafeMenu),"조리 가능 "+state.AvailableFor(b)+"인분 · "+PetTownCafeRecipes.Price(b.cafeMenu)+" 골드","메뉴 관리","농장·목장 생산물로 메뉴 재료를 준비하고 이 카페에서 판매할 메뉴를 고릅니다. 메뉴 변경은 새 주문부터 적용합니다.",3));
+         var refresh=OperationsEntry(-7,"방문 목록 새로고침","","진행 상태는 자동으로 갱신됩니다","목록 새로고침","새로 도착한 방문을 목록에 표시합니다.",5);refresh.PriceProvider=()=>state.visits.FindAll(v=>v.buildingId==id).Count+"건 진행 중";entries.Add(refresh);
+         foreach(var v in state.visits)if(v.buildingId==id)
+         {
+-            var visit=v;visitIds.Add(visit.id);var entry=OperationsEntry(visitIds.Count-1,visit.residentName+" · "+visit.petName,FacilityVisitStatus(visit),"이용료 "+PetTownFacilityState.Fee(kind)+" 골드","방문 관리","조리·검진은 작업 지점에 도착한 뒤 시작할 수 있어요.\n완료 후 접수대에서 수납합니다.",9);
++            var visit=v;visitIds.Add(visit.id);var entry=OperationsEntry(visitIds.Count-1,visit.residentName+" · "+visit.petName,FacilityVisitStatus(visit),(kind==3?PetTownCafeRecipes.Name(visit.cafeMenu)+" · ":"")+PetTownFacilityState.VisitFee(visit)+" 골드","방문 관리","조리·검진은 작업 지점에 도착한 뒤 시작할 수 있어요.\n완료 후 접수대에서 수납합니다.",9);
+             entry.PriceProvider=()=>state.visits.Contains(visit)?FacilityVisitStatus(visit):"방문 완료";entries.Add(entry);
+         }
+         catalogWindow.Show(PetTownFacilityState.KindName(kind)+" 운영",entries,e=>
+         {
+             if(!OperationsReady())return;var current=FacilityRoom(id);if(!current){OpenFacilities();return;}
+-            if(e.Key==-7){OpenFacilityBusiness(id);return;}if(e.Key==-9){OpenFacilityWorkers(id);return;}
++            if(e.Key==-10){OpenCafeRecipes(id);return;}if(e.Key==-7){OpenFacilityBusiness(id);return;}if(e.Key==-9){OpenFacilityWorkers(id);return;}
+             if(e.Key==-8){b.staffService=!b.staffService;if(!b.staffService)CancelFacilityWorkersForBuilding(id);SaveFacilityStaffProgress();OpenFacilityBusiness(id);return;}
+             if(e.Key==-1)b.open=!b.open;else if(e.Key==-2)b.automatic=!b.automatic;
+             else if(e.Key==-3){if(state.BuySupplies(kind,ref money))Message("소모품5개를 보충했어요.");else Message("골드가 부족하거나 보관 한도에 도달했어요.");}
+@@ -55,7 +56,7 @@
+     {
+         var v=Progression.Facilities.visits.Find(p=>p.id==visitId);if(v==null){OpenFacilities();return;}
+         string action=v.stage==PetTownFacilityStage.Waiting?(v.kind==3?"조리 시작":"예방검진 시작"):v.stage==PetTownFacilityStage.Payment?"결제 받기":v.stage==PetTownFacilityStage.Working&&v.staffRequired?"직접 업무 이어하기":"상태 새로고침";
+-        var entries=new List<PetTownCatalogEntry>{OperationsEntry(0,v.residentName+" · "+v.petName,FacilityVisitStatus(v),"이용료 "+PetTownFacilityState.Fee(v.kind)+" 골드",action,"작업 지점 도착을 확인한 뒤 진행합니다.\n조리·검진 소모품은 시작할 때1개 사용하며 결제는 완료 후1회만 받을 수 있습니다.",9),OperationsEntry(1,"방문 종료",v.suppliesUsed?"사용한 소모품은 반환되지 않습니다":"아직 소모품을 사용하지 않았습니다","수납 전 종료하면 수익 없음","방문 종료 확인","주민은 기존 마을 생활로 돌아갑니다.",5)};
++        var entries=new List<PetTownCatalogEntry>{OperationsEntry(0,v.residentName+" · "+v.petName,FacilityVisitStatus(v),(v.kind==3?PetTownCafeRecipes.Name(v.cafeMenu)+" · ":"")+PetTownFacilityState.VisitFee(v)+" 골드",action,"작업 지점 도착을 확인한 뒤 진행합니다.\n조리·검진 소모품은 시작할 때1개 사용하며 결제는 완료 후1회만 받을 수 있습니다.",9),OperationsEntry(1,"방문 종료",v.suppliesUsed?"사용한 소모품은 반환되지 않습니다":"아직 소모품을 사용하지 않았습니다","수납 전 종료하면 수익 없음","방문 종료 확인","주민은 기존 마을 생활로 돌아갑니다.",5)};
+         entries[0].PriceProvider=()=>Progression.Facilities.visits.Contains(v)?FacilityVisitStatus(v):"방문 완료";
+         entries[0].ActionProvider=()=>v.stage==PetTownFacilityStage.Waiting?(v.kind==3?"조리 시작":"예방검진 시작"):v.stage==PetTownFacilityStage.Payment?"결제 받기":v.stage==PetTownFacilityStage.Working&&v.staffRequired?"직접 업무 이어하기":"상태 새로고침";
+         catalogWindow.Show("시설 방문 관리",entries,e=>
+@@ -83,7 +84,7 @@
+     }
+     void OpenFacilityReceipts(string building)
+     {
+-        var entries=new List<PetTownCatalogEntry>();int i=0;foreach(var p in Progression.Facilities.receipts)if(building==null||building==p.buildingId)entries.Add(OperationsEntry(i++,p.residentName+" · "+p.petName,p.income+" 골드","Day "+p.day+" · "+PetTownFacilityState.KindName(p.kind),"운영 목록","실제로 수납한 결제입니다.",8));
++        var entries=new List<PetTownCatalogEntry>();int i=0;foreach(var p in Progression.Facilities.receipts)if(building==null||building==p.buildingId)entries.Add(OperationsEntry(i++,p.residentName+" · "+p.petName,p.income+" 골드","Day "+p.day+" · "+(p.kind==3?PetTownCafeRecipes.Name(p.cafeMenu):PetTownFacilityState.KindName(p.kind)),"운영 목록","실제로 수납한 결제입니다.",8));
+         if(entries.Count==0)entries.Add(OperationsEntry(0,"아직 결제 기록이 없어요","실제 수납 후 기록됩니다","자동 수익 없음","운영 목록","주민 방문을 끝까지 진행하고 접수대에서 수납해 주세요.",8));
+         catalogWindow.Show("시설 결제 기록",entries,e=>{if(building==null)OpenFacilities();else OpenFacilityBusiness(building);},()=>{},()=>{});
+     }

@@ -1,0 +1,8 @@
+selected material 005:True
+surface has original height relief:True
+normal AO roughness maps active:True
+metre based texture UV:True
+no paving in water safety area:True
+no degenerate or duplicate triangles:True
+all visit points on curved paving:True
+mobile vertex count below 10000:True

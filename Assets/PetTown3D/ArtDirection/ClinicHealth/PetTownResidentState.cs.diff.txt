@@ -1,0 +1,19 @@
+--- before/PetTownResidentState.cs
++++ after/PetTownResidentState.cs
+@@ -5,6 +5,7 @@
+ [Serializable]
+ public sealed class PetTownResidentPetRecord
+ {
++    public PetTownPetHealth health;
+     public bool groomed;public int sex,generation;public string parentA,parentB;
+     public string id,name;
+     public int species,level,experience,appearance,adoptedDay,lastCafeDay,lastCheckupDay,walkDay,walkXP;
+@@ -63,7 +64,7 @@
+             if(string.IsNullOrEmpty(p.name))p.name="주민";
+             if(p.pets==null)p.pets=new List<PetTownResidentPetRecord>();p.pets.RemoveAll(v=>v==null);
+             if(!string.IsNullOrEmpty(p.followPetId)&&!p.pets.Exists(v=>v.id==p.followPetId))p.followPetId=null;
+-            foreach(var pet in p.pets)pet.walkXP=Mathf.Clamp(pet.walkXP,0,5);
++            foreach(var pet in p.pets){pet.walkXP=Mathf.Clamp(pet.walkXP,0,5);pet.health?.Normalize();}
+             p.happiness=Mathf.Clamp(float.IsNaN(p.happiness)?45:p.happiness,0,100);p.appearance=Mathf.Max(0,p.appearance);
+         }
+         history.RemoveAll(v=>v==null);if(history.Count>50)history.RemoveRange(50,history.Count-50);

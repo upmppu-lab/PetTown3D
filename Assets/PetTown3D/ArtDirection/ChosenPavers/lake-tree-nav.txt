@@ -1,0 +1,8 @@
+lake rotation 0 slot 0:True
+lake rotation 0 slot 1:True
+lake rotation 0 slot 2:True
+lake rotation 0 slot 3:True
+lake rotation 90 slot 0:True
+lake rotation 90 slot 1:True
+lake rotation 90 slot 2:True
+lake rotation 90 slot 3:True

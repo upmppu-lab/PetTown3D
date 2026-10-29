@@ -1,0 +1,13 @@
+{
+  "portrait": true,
+  "actual_ui_prepared_sandwich": true,
+  "actual_ui_prepared_pudding": true,
+  "actual_ui_selected_menu": true,
+  "base_consumed_exactly": true,
+  "gold_not_spent_by_preparation": true,
+  "unintendedTextOverflow": 0,
+  "intentionalEllipsis": 0,
+  "buttonsBelow44": 0,
+  "overflowNames": [],
+  "rows": 8
+}
