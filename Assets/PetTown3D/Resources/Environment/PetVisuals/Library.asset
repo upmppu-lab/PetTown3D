@@ -1,0 +1,543 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7547d27b9eddc824987ec3c4c0b45070, type: 3}
+  m_Name: Library
+  m_EditorClassIdentifier: Assembly-CSharp::PetTownPetVisualLibrary
+  animals:
+  - species: 1
+    appearance: 0
+    resourcePath: Environment/PetVisuals/Cat
+    displayName: 
+    prefab: {fileID: 8095354520738306915, guid: 10166fbebbd8e2a44a8d18f65b38d359, type: 3}
+    idle: {fileID: 8577818109400774170, guid: 31d2c91682ac6f045b4b75ebf27e5d77, type: 3}
+    walk: {fileID: -5156239905007698629, guid: 31d2c91682ac6f045b4b75ebf27e5d77, type: 3}
+    run: {fileID: 2428467827692170992, guid: 31d2c91682ac6f045b4b75ebf27e5d77, type: 3}
+    height: 0.58
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 9c84a83a07ce05a4a8c8069fb7f16243, type: 3}
+  - species: 2
+    appearance: 0
+    resourcePath: Environment/PetVisuals/Rabbit
+    displayName: 
+    prefab: {fileID: 5446920190453942935, guid: 26190605211d6684d908585bd6390349, type: 3}
+    idle: {fileID: 5278477661765120662, guid: a3b3ca27e9ad6874a96e291c13c7cdc0, type: 3}
+    walk: {fileID: -3828583913261678786, guid: a3b3ca27e9ad6874a96e291c13c7cdc0, type: 3}
+    run: {fileID: -3828583913261678786, guid: a3b3ca27e9ad6874a96e291c13c7cdc0, type: 3}
+    height: 0.46
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 7a650cee3a41cbf4eba0fcf1893f24fd, type: 3}
+  - species: 0
+    appearance: 0
+    resourcePath: Characters/Pets/Dog_Maltese_Beige/Dog_Maltese_Beige
+    displayName: "\uB9D0\uD2F0\uC988 \uBCA0\uC774\uC9C0"
+    prefab: {fileID: 3899415004525449144, guid: 6e6889cf154bdec4f9e5872a326a0389, type: 3}
+    idle: {fileID: 7400000, guid: cf851554d7d7f7045a7fcc9c73699725, type: 2}
+    walk: {fileID: 7400000, guid: cf851554d7d7f7045a7fcc9c73699725, type: 2}
+    run: {fileID: 7400000, guid: cf851554d7d7f7045a7fcc9c73699725, type: 2}
+    height: 0.45
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 1befb3aa635a0e34296ece66ad5d81ef, type: 3}
+  - species: 0
+    appearance: 1
+    resourcePath: Characters/Pets/Dog_Maltese_Brown/Dog_Maltese_Brown
+    displayName: "\uB9D0\uD2F0\uC988 \uBE0C\uB77C\uC6B4"
+    prefab: {fileID: 3867782150500203726, guid: fb8409e9a65848544b24937bd8137dc2, type: 3}
+    idle: {fileID: 7400000, guid: 0621808a71ef6c04e9ce0aa9fbc395a2, type: 2}
+    walk: {fileID: 7400000, guid: 0621808a71ef6c04e9ce0aa9fbc395a2, type: 2}
+    run: {fileID: 7400000, guid: 0621808a71ef6c04e9ce0aa9fbc395a2, type: 2}
+    height: 0.45
+    yaw: 0
+    portrait: {fileID: 2800000, guid: d13edd8947160c24d97f34e7cd938f3f, type: 3}
+  - species: 0
+    appearance: 2
+    resourcePath: Characters/Pets/Dog_Maltese_White/Dog_Maltese_White
+    displayName: "\uB9D0\uD2F0\uC988 \uD654\uC774\uD2B8"
+    prefab: {fileID: 8953316566298905370, guid: 3cb7450fc9411f04992f207bb6bee98f, type: 3}
+    idle: {fileID: 7400000, guid: fee0150d5d6b28e428691f3c82520abc, type: 2}
+    walk: {fileID: 7400000, guid: fee0150d5d6b28e428691f3c82520abc, type: 2}
+    run: {fileID: 7400000, guid: fee0150d5d6b28e428691f3c82520abc, type: 2}
+    height: 0.45
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 80d7475cd739d1a448bce6004f95b37d, type: 3}
+  - species: 0
+    appearance: 3
+    resourcePath: Characters/Pets/Dog_Poodle_Black/Dog_Poodle_Black
+    displayName: "\uD478\uB4E4 \uBE14\uB799"
+    prefab: {fileID: 1756110169396966601, guid: 2dbe1533d4255934d9944e44a0e9ecc4, type: 3}
+    idle: {fileID: 7400000, guid: be320eaa533556047afe887d1b913100, type: 2}
+    walk: {fileID: 7400000, guid: be320eaa533556047afe887d1b913100, type: 2}
+    run: {fileID: 7400000, guid: be320eaa533556047afe887d1b913100, type: 2}
+    height: 0.55
+    yaw: 0
+    portrait: {fileID: 2800000, guid: f375f12da862cc444bcdba707442ee53, type: 3}
+  - species: 0
+    appearance: 4
+    resourcePath: Characters/Pets/Dog_Poodle_BlackWhite/Dog_Poodle_BlackWhite
+    displayName: "\uD478\uB4E4 \uBE14\uB799\uD654\uC774\uD2B8"
+    prefab: {fileID: 2957538343950389027, guid: 8adc16658f083c447868089168887d79, type: 3}
+    idle: {fileID: 7400000, guid: b76ca2e1d82036640af4b55122e71b52, type: 2}
+    walk: {fileID: 7400000, guid: b76ca2e1d82036640af4b55122e71b52, type: 2}
+    run: {fileID: 7400000, guid: b76ca2e1d82036640af4b55122e71b52, type: 2}
+    height: 0.55
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 691941aa171012442887c22a5f9dc667, type: 3}
+  - species: 0
+    appearance: 5
+    resourcePath: Characters/Pets/Dog_Poodle_BrownSpotted/Dog_Poodle_BrownSpotted
+    displayName: "\uD478\uB4E4 \uAC08\uC0C9\uC810\uBC15\uC774"
+    prefab: {fileID: 1146549882873406413, guid: fbb6ba156339c63428b0aee3d2a0d5ea, type: 3}
+    idle: {fileID: 7400000, guid: f118fbe94a09258409cfda8f1616a19f, type: 2}
+    walk: {fileID: 7400000, guid: f118fbe94a09258409cfda8f1616a19f, type: 2}
+    run: {fileID: 7400000, guid: f118fbe94a09258409cfda8f1616a19f, type: 2}
+    height: 0.55
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 948737944b34fe84a9a41721e26df2eb, type: 3}
+  - species: 0
+    appearance: 6
+    resourcePath: Characters/Pets/Dog_Retriever_Black/Dog_Retriever_Black
+    displayName: "\uB9AC\uD2B8\uB9AC\uBC84 \uBE14\uB799"
+    prefab: {fileID: 4397756744099206193, guid: e836b7bbac1cd964b956ab811ff8924c, type: 3}
+    idle: {fileID: 7400000, guid: 54d77429eedde5c4fa098879234f2878, type: 2}
+    walk: {fileID: 7400000, guid: 54d77429eedde5c4fa098879234f2878, type: 2}
+    run: {fileID: 7400000, guid: 54d77429eedde5c4fa098879234f2878, type: 2}
+    height: 0.8
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 19b46aea646e6b14e9c7e25651976121, type: 3}
+  - species: 0
+    appearance: 7
+    resourcePath: Characters/Pets/Dog_Retriever_Golden/Dog_Retriever_Golden
+    displayName: "\uB9AC\uD2B8\uB9AC\uBC84 \uACE8\uB4E0"
+    prefab: {fileID: 1917641421692813801, guid: cc81fb17234d4b545872245071d5f8c0, type: 3}
+    idle: {fileID: 7400000, guid: 99890555c7756e64db100519747e3b4f, type: 2}
+    walk: {fileID: 7400000, guid: 99890555c7756e64db100519747e3b4f, type: 2}
+    run: {fileID: 7400000, guid: 99890555c7756e64db100519747e3b4f, type: 2}
+    height: 0.8
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 5102189d54cb04848834e9ea1dc3bd0a, type: 3}
+  - species: 0
+    appearance: 8
+    resourcePath: Characters/Pets/Dog_Shiba_Black/Dog_Shiba_Black
+    displayName: "\uC2DC\uBC14 \uBE14\uB799"
+    prefab: {fileID: 5741626668585851174, guid: c71e21ab72a143b4ba60deaef1d80cfe, type: 3}
+    idle: {fileID: 7400000, guid: f9d7e8073f75f9742825605c6303d964, type: 2}
+    walk: {fileID: 7400000, guid: f9d7e8073f75f9742825605c6303d964, type: 2}
+    run: {fileID: 7400000, guid: f9d7e8073f75f9742825605c6303d964, type: 2}
+    height: 0.6
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 84f8380607de43f4c961b04f080b691b, type: 3}
+  - species: 0
+    appearance: 9
+    resourcePath: Characters/Pets/Dog_Shiba_Brown/Dog_Shiba_Brown
+    displayName: "\uC2DC\uBC14 \uBE0C\uB77C\uC6B4"
+    prefab: {fileID: 8903544469717222184, guid: e97dc3f4bfc1dbf4b9e776a4290f7d85, type: 3}
+    idle: {fileID: 7400000, guid: a22b37f27320b2841b40a53b316b636c, type: 2}
+    walk: {fileID: 7400000, guid: a22b37f27320b2841b40a53b316b636c, type: 2}
+    run: {fileID: 7400000, guid: a22b37f27320b2841b40a53b316b636c, type: 2}
+    height: 0.6
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 1c8d57f905119854c8289e5b344ced44, type: 3}
+  - species: 0
+    appearance: 10
+    resourcePath: Characters/Pets/Dog_Shiba_Red/Dog_Shiba_Red
+    displayName: "\uC2DC\uBC14 \uB808\uB4DC"
+    prefab: {fileID: 6905106345233617555, guid: f88ba7c5b7ac5b6438e55e0082e045f4, type: 3}
+    idle: {fileID: 7400000, guid: b3d5d9d89f35fa3429072e4fec84fa69, type: 2}
+    walk: {fileID: 7400000, guid: b3d5d9d89f35fa3429072e4fec84fa69, type: 2}
+    run: {fileID: 7400000, guid: b3d5d9d89f35fa3429072e4fec84fa69, type: 2}
+    height: 0.6
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 447a2654173a33548b60f187571e92cc, type: 3}
+  - species: 0
+    appearance: 11
+    resourcePath: Characters/Pets/Dog_Husky_Brown/Dog_Husky_Brown
+    displayName: "\uD5C8\uC2A4\uD0A4 \uBE0C\uB77C\uC6B4"
+    prefab: {fileID: 2425806839558923954, guid: 1bcf561ff2f887241b837cfb62fc0775, type: 3}
+    idle: {fileID: 7400000, guid: 43e349c5086653f48be1065aa650e9ce, type: 2}
+    walk: {fileID: 7400000, guid: 43e349c5086653f48be1065aa650e9ce, type: 2}
+    run: {fileID: 7400000, guid: 43e349c5086653f48be1065aa650e9ce, type: 2}
+    height: 0.75
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 4a3329d35188b6b4ab1a536d80b8fd9a, type: 3}
+  - species: 0
+    appearance: 12
+    resourcePath: Characters/Pets/Dog_Husky_FluffyBlack/Dog_Husky_FluffyBlack
+    displayName: "\uD5C8\uC2A4\uD0A4 \uBE14\uB799 \uD48D\uC131"
+    prefab: {fileID: 8612190907381499214, guid: 548f2918f16297a4ab7cac5b6b7d657b, type: 3}
+    idle: {fileID: 7400000, guid: 987fececb38906e4f806831db3ec568a, type: 2}
+    walk: {fileID: 7400000, guid: 987fececb38906e4f806831db3ec568a, type: 2}
+    run: {fileID: 7400000, guid: 987fececb38906e4f806831db3ec568a, type: 2}
+    height: 0.75
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 0a69cc34b3cf5164a833157b0a54e184, type: 3}
+  - species: 0
+    appearance: 13
+    resourcePath: Characters/Pets/Dog_Husky_FluffyBrown/Dog_Husky_FluffyBrown
+    displayName: "\uD5C8\uC2A4\uD0A4 \uBE0C\uB77C\uC6B4 \uD48D\uC131"
+    prefab: {fileID: 5276608281267878756, guid: c1e9c8f6e3106194383715f06b975314, type: 3}
+    idle: {fileID: 7400000, guid: d4addfda6307bb84eb860c8704c6ce20, type: 2}
+    walk: {fileID: 7400000, guid: d4addfda6307bb84eb860c8704c6ce20, type: 2}
+    run: {fileID: 7400000, guid: d4addfda6307bb84eb860c8704c6ce20, type: 2}
+    height: 0.75
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 4e76bb6a5aba81643bd7faa09c0e7914, type: 3}
+  - species: 0
+    appearance: 14
+    resourcePath: Characters/Pets/Dog_Husky_Gray/Dog_Husky_Gray
+    displayName: "\uD5C8\uC2A4\uD0A4 \uADF8\uB808\uC774"
+    prefab: {fileID: 1834151426034533826, guid: 32cfcbdc388741f44a86507911d37201, type: 3}
+    idle: {fileID: 7400000, guid: 82601ea1b54c10344966b3c67dc3c609, type: 2}
+    walk: {fileID: 7400000, guid: 82601ea1b54c10344966b3c67dc3c609, type: 2}
+    run: {fileID: 7400000, guid: 82601ea1b54c10344966b3c67dc3c609, type: 2}
+    height: 0.75
+    yaw: 0
+    portrait: {fileID: 2800000, guid: d1d834b403d450e4e8bdb7e9cf1c5df5, type: 3}
+  - species: 0
+    appearance: 15
+    resourcePath: Characters/Pets/Dog_Husky_White/Dog_Husky_White
+    displayName: "\uD5C8\uC2A4\uD0A4 \uD654\uC774\uD2B8"
+    prefab: {fileID: 5212531103396094948, guid: bb593eece9423264294c54bef43d2c65, type: 3}
+    idle: {fileID: 7400000, guid: 7d2b66c83268d3d4e8675b0ebb4b2458, type: 2}
+    walk: {fileID: 7400000, guid: 7d2b66c83268d3d4e8675b0ebb4b2458, type: 2}
+    run: {fileID: 7400000, guid: 7d2b66c83268d3d4e8675b0ebb4b2458, type: 2}
+    height: 0.75
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 0623c3b4019e497438b9db3876f40a75, type: 3}
+  - species: 0
+    appearance: 16
+    resourcePath: Characters/Pets/Dog_Dalmatian_BrownSpotted/Dog_Dalmatian_BrownSpotted
+    displayName: "\uB2EC\uB9C8\uC2DC\uC548 \uAC08\uC0C9"
+    prefab: {fileID: 1183928023599022197, guid: baf770136d18e3540a84183f4b79d94c, type: 3}
+    idle: {fileID: 7400000, guid: 78d3a8258ac64264395967f7871aa99d, type: 2}
+    walk: {fileID: 7400000, guid: 78d3a8258ac64264395967f7871aa99d, type: 2}
+    run: {fileID: 7400000, guid: 78d3a8258ac64264395967f7871aa99d, type: 2}
+    height: 0.75
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 4f2925ec7ca5048458c98e6921159e90, type: 3}
+  - species: 0
+    appearance: 17
+    resourcePath: Characters/Pets/Dog_Dalmatian_A/Dog_Dalmatian_A
+    displayName: "\uB2EC\uB9C8\uC2DC\uC548 A"
+    prefab: {fileID: 6449926792113553517, guid: 7811c61884e9e6b4a872c684350cbc4d, type: 3}
+    idle: {fileID: 7400000, guid: 4a50bcc8329ccb0448576c3f1f426907, type: 2}
+    walk: {fileID: 7400000, guid: 4a50bcc8329ccb0448576c3f1f426907, type: 2}
+    run: {fileID: 7400000, guid: 4a50bcc8329ccb0448576c3f1f426907, type: 2}
+    height: 0.75
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 4050b460b65cb904fa23c5438c993fd9, type: 3}
+  - species: 0
+    appearance: 18
+    resourcePath: Characters/Pets/Dog_Dalmatian_B/Dog_Dalmatian_B
+    displayName: "\uB2EC\uB9C8\uC2DC\uC548 B"
+    prefab: {fileID: 2146638258443415184, guid: 8391ea2b474f6c845aca5f648d059003, type: 3}
+    idle: {fileID: 7400000, guid: c953b56c252144b4e9bec1bb97cd1c22, type: 2}
+    walk: {fileID: 7400000, guid: c953b56c252144b4e9bec1bb97cd1c22, type: 2}
+    run: {fileID: 7400000, guid: c953b56c252144b4e9bec1bb97cd1c22, type: 2}
+    height: 0.75
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 68152deb2da458546a9ce0e40c3f7075, type: 3}
+  - species: 0
+    appearance: 19
+    resourcePath: Characters/Pets/Dog_Fluffy_Spotted/Dog_Fluffy_Spotted
+    displayName: "\uD48D\uC131\uC774 \uC810\uBC15\uC774"
+    prefab: {fileID: 1212988324954632939, guid: 3992c6173d3148146b8cb08999b3bc6b, type: 3}
+    idle: {fileID: 7400000, guid: 3864d9a45557973468fb960e97a7361f, type: 2}
+    walk: {fileID: 7400000, guid: 3864d9a45557973468fb960e97a7361f, type: 2}
+    run: {fileID: 7400000, guid: 3864d9a45557973468fb960e97a7361f, type: 2}
+    height: 0.6
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 91807cad9bb1c95438a265508c8b510d, type: 3}
+  - species: 3
+    appearance: 0
+    resourcePath: Characters/Pets/Ferret_A/Ferret_A
+    displayName: "\uD398\uB7FF A"
+    prefab: {fileID: 2462513117830263894, guid: ca023de5de40e344291111afd5a22f90, type: 3}
+    idle: {fileID: 7400000, guid: 7068b7aa778d0d7489172b9ade9e9e3f, type: 2}
+    walk: {fileID: 7400000, guid: 7068b7aa778d0d7489172b9ade9e9e3f, type: 2}
+    run: {fileID: 7400000, guid: 7068b7aa778d0d7489172b9ade9e9e3f, type: 2}
+    height: 0.42
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 4259559df966b6d468ea9645ea5bce01, type: 3}
+  - species: 3
+    appearance: 1
+    resourcePath: Characters/Pets/Ferret_WhiteCream/Ferret_WhiteCream
+    displayName: "\uD398\uB7FF \uD654\uC774\uD2B8\uD06C\uB9BC"
+    prefab: {fileID: 2380997521435964106, guid: 8b96bd2f9c6adb1409170cfb0f85b182, type: 3}
+    idle: {fileID: 7400000, guid: 5095984775a527246b555477d497a040, type: 2}
+    walk: {fileID: 7400000, guid: 5095984775a527246b555477d497a040, type: 2}
+    run: {fileID: 7400000, guid: 5095984775a527246b555477d497a040, type: 2}
+    height: 0.42
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 88247014c55546445abc8b0b8b7e7fa2, type: 3}
+  - species: 4
+    appearance: 0
+    resourcePath: Characters/Pets/GuineaPig_Brown/GuineaPig_Brown
+    displayName: "\uAE30\uB2C8\uD53C\uADF8 \uBE0C\uB77C\uC6B4"
+    prefab: {fileID: 2953235636257602129, guid: 9750e4a27edc04948bdff0b0cd552ecd, type: 3}
+    idle: {fileID: 7400000, guid: 0d33935d6f918a7439dab70c6dcbf14a, type: 2}
+    walk: {fileID: 7400000, guid: 0d33935d6f918a7439dab70c6dcbf14a, type: 2}
+    run: {fileID: 7400000, guid: 0d33935d6f918a7439dab70c6dcbf14a, type: 2}
+    height: 0.35
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 0aaea9edd699ce0429cdb968bcd7bec1, type: 3}
+  - species: 4
+    appearance: 1
+    resourcePath: Characters/Pets/GuineaPig_Calico/GuineaPig_Calico
+    displayName: "\uAE30\uB2C8\uD53C\uADF8 \uCE7C\uB9AC\uCF54"
+    prefab: {fileID: 6575646367172321253, guid: d7388c059c7bac1498f53f2b678f5896, type: 3}
+    idle: {fileID: 7400000, guid: 5a0082ab4541f0f45989ec2bbe0ff5a9, type: 2}
+    walk: {fileID: 7400000, guid: 5a0082ab4541f0f45989ec2bbe0ff5a9, type: 2}
+    run: {fileID: 7400000, guid: 5a0082ab4541f0f45989ec2bbe0ff5a9, type: 2}
+    height: 0.35
+    yaw: 0
+    portrait: {fileID: 2800000, guid: b94cd2544140427439cd348963e87077, type: 3}
+  - species: 4
+    appearance: 2
+    resourcePath: Characters/Pets/GuineaPig_Chubby/GuineaPig_Chubby
+    displayName: "\uAE30\uB2C8\uD53C\uADF8 \uD1B5\uD1B5\uC774"
+    prefab: {fileID: 6486454256963623490, guid: 033e54fbac2b83b47acb762a9af64975, type: 3}
+    idle: {fileID: 7400000, guid: 49ef76a208da18c44a9d3104fb436ffe, type: 2}
+    walk: {fileID: 7400000, guid: 49ef76a208da18c44a9d3104fb436ffe, type: 2}
+    run: {fileID: 7400000, guid: 49ef76a208da18c44a9d3104fb436ffe, type: 2}
+    height: 0.35
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 2ca96480f3817684bbed47b7626e69c8, type: 3}
+  - species: 5
+    appearance: 0
+    resourcePath: Characters/Pets/Creature_06/Creature_06
+    displayName: "\uD584\uC2A4\uD130 \uBE0C\uB77C\uC6B4"
+    prefab: {fileID: 2355913161547828910, guid: 1ae8426b92a7e1247886fb7cb5d49485, type: 3}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    run: {fileID: 0}
+    height: 0.22
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 6285310425e633740959edb2a1eeb4b9, type: 3}
+  - species: 5
+    appearance: 1
+    resourcePath: Characters/Pets/Creature_12/Creature_12
+    displayName: "\uD584\uC2A4\uD130 \uD654\uC774\uD2B8"
+    prefab: {fileID: 722632730017102896, guid: 05cb104eb9ba2ab46acafff23d6c66b5, type: 3}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    run: {fileID: 0}
+    height: 0.22
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 103fb930472d07942ab06a02a0dcdca1, type: 3}
+  - species: 5
+    appearance: 2
+    resourcePath: Characters/Pets/Creature_13/Creature_13
+    displayName: "\uD584\uC2A4\uD130 \uADF8\uB808\uC774"
+    prefab: {fileID: 1883966219915255404, guid: 1e76f84deeb0d974ea5fad7df45ba5fe, type: 3}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    run: {fileID: 0}
+    height: 0.22
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 763c12a48713693418504cdd93aac9d7, type: 3}
+  - species: 6
+    appearance: 0
+    resourcePath: Characters/Pets/Creature_08/Creature_08
+    displayName: "\uC950 \uD06C\uB9BC"
+    prefab: {fileID: 4700092588783311316, guid: 7b16a80b7af45364597148393448ddc1, type: 3}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    run: {fileID: 0}
+    height: 0.28
+    yaw: 0
+    portrait: {fileID: 2800000, guid: afd252946f72cc441a707c86fbaa3396, type: 3}
+  - species: 6
+    appearance: 1
+    resourcePath: Characters/Pets/Creature_11/Creature_11
+    displayName: "\uC950 \uBE14\uB799\uD654\uC774\uD2B8"
+    prefab: {fileID: 6483868483191559882, guid: b03bd1163002d6f49a3c66b85d3af2ae, type: 3}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    run: {fileID: 0}
+    height: 0.28
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 25df85a574ccafc4296c5a10fc549f91, type: 3}
+  - species: 7
+    appearance: 0
+    resourcePath: Characters/Pets/Creature_05/Creature_05
+    displayName: "\uCE5C\uCE60\uB77C \uADF8\uB808\uC774"
+    prefab: {fileID: 8520884563347123888, guid: e02fb9e54c578304ea648f0ab65a3533, type: 3}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    run: {fileID: 0}
+    height: 0.32
+    yaw: 0
+    portrait: {fileID: 2800000, guid: a04f656810c26094baff9f181834a225, type: 3}
+  - species: 7
+    appearance: 1
+    resourcePath: Characters/Pets/Creature_14/Creature_14
+    displayName: "\uCE5C\uCE60\uB77C \uB2E4\uD06C"
+    prefab: {fileID: 3409969788436724817, guid: ba907b533a92d26478dfa1362ef8ba65, type: 3}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    run: {fileID: 0}
+    height: 0.32
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 7591b38b65bd4f04bad762bcbdf47a55, type: 3}
+  - species: 1
+    appearance: 1
+    resourcePath: Characters/Pets/Cat_GreyTabby/Cat_GreyTabby
+    displayName: "\uACE0\uC591\uC774 \uADF8\uB808\uC774 \uD0DC\uBE44"
+    prefab: {fileID: 2306917270434206138, guid: 31f846fe0673c714fb126cb91ab239fc, type: 3}
+    idle: {fileID: 7400000, guid: 2e867a21ae591904883542dff65d5f01, type: 2}
+    walk: {fileID: 7400000, guid: 2e867a21ae591904883542dff65d5f01, type: 2}
+    run: {fileID: 7400000, guid: 2e867a21ae591904883542dff65d5f01, type: 2}
+    height: 0.58
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 6ef2502d2494d5840a6831909e7d6757, type: 3}
+  - species: 1
+    appearance: 2
+    resourcePath: Characters/Pets/Cat_LightSiamese/Cat_LightSiamese
+    displayName: "\uACE0\uC591\uC774 \uB77C\uC774\uD2B8 \uC0F4"
+    prefab: {fileID: 6217289304399321211, guid: 24bea77691f3d7f40b840e4e3a5268f3, type: 3}
+    idle: {fileID: 7400000, guid: 6044712331fb3cf49ace75774c9ea022, type: 2}
+    walk: {fileID: 7400000, guid: 6044712331fb3cf49ace75774c9ea022, type: 2}
+    run: {fileID: 7400000, guid: 6044712331fb3cf49ace75774c9ea022, type: 2}
+    height: 0.58
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 2b35cfe271acc9048b23d6258a43570e, type: 3}
+  - species: 1
+    appearance: 3
+    resourcePath: Characters/Pets/Cat_OrangeTabby/Cat_OrangeTabby
+    displayName: "\uACE0\uC591\uC774 \uC624\uB80C\uC9C0 \uD0DC\uBE44"
+    prefab: {fileID: 6482769942022252458, guid: 59792da1f253a524793fe4b1069000cb, type: 3}
+    idle: {fileID: 7400000, guid: 66ea4d9495474f44dae241a0ffdef7cc, type: 2}
+    walk: {fileID: 7400000, guid: 66ea4d9495474f44dae241a0ffdef7cc, type: 2}
+    run: {fileID: 7400000, guid: 66ea4d9495474f44dae241a0ffdef7cc, type: 2}
+    height: 0.58
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 6e52ffdb582884e4d894f834d664c5e4, type: 3}
+  - species: 1
+    appearance: 4
+    resourcePath: Characters/Pets/Cat_ScottishFold/Cat_ScottishFold
+    displayName: "\uACE0\uC591\uC774 \uC2A4\uCF54\uD2F0\uC2DC \uD3F4\uB4DC"
+    prefab: {fileID: 1457310870026102566, guid: b65d3f1415bc49a4597a83f474f74c19, type: 3}
+    idle: {fileID: 7400000, guid: e2206270fa73ced46aaa6fd88a8d1487, type: 2}
+    walk: {fileID: 7400000, guid: e2206270fa73ced46aaa6fd88a8d1487, type: 2}
+    run: {fileID: 7400000, guid: e2206270fa73ced46aaa6fd88a8d1487, type: 2}
+    height: 0.58
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 53ecfb04e0fd152459977a16c4c41e8c, type: 3}
+  - species: 1
+    appearance: 5
+    resourcePath: Characters/Pets/Cat_Siamese/Cat_Siamese
+    displayName: "\uACE0\uC591\uC774 \uC0F4"
+    prefab: {fileID: 6866090175747837702, guid: 1187014580af04840ab0d28380a4aa40, type: 3}
+    idle: {fileID: 7400000, guid: 5225b1f7a87c7934d97dbd94640ea3f5, type: 2}
+    walk: {fileID: 7400000, guid: 5225b1f7a87c7934d97dbd94640ea3f5, type: 2}
+    run: {fileID: 7400000, guid: 5225b1f7a87c7934d97dbd94640ea3f5, type: 2}
+    height: 0.58
+    yaw: 0
+    portrait: {fileID: 2800000, guid: c27acddbf6332224f9d26db39daabc24, type: 3}
+  - species: 1
+    appearance: 6
+    resourcePath: Characters/Pets/Cat_Tuxedo/Cat_Tuxedo
+    displayName: "\uACE0\uC591\uC774 \uD131\uC2DC\uB3C4"
+    prefab: {fileID: 4351778370291991487, guid: d7769e7cc1e5c9148a2e4623cc029eed, type: 3}
+    idle: {fileID: 7400000, guid: d5d56566114d91049803322c60210c5d, type: 2}
+    walk: {fileID: 7400000, guid: d5d56566114d91049803322c60210c5d, type: 2}
+    run: {fileID: 7400000, guid: d5d56566114d91049803322c60210c5d, type: 2}
+    height: 0.58
+    yaw: 0
+    portrait: {fileID: 2800000, guid: c7076ae9c769bab44b0382112a21a865, type: 3}
+  - species: 1
+    appearance: 7
+    resourcePath: Characters/Pets/Cat_WhiteScottishFold/Cat_WhiteScottishFold
+    displayName: "\uACE0\uC591\uC774 \uD654\uC774\uD2B8 \uD3F4\uB4DC"
+    prefab: {fileID: 5227726006394280875, guid: 1bb0d1f6fbe9b6b48a4622f04c7cf06f, type: 3}
+    idle: {fileID: 7400000, guid: b4bd5922d7ace3c4f88f8c371c709c2a, type: 2}
+    walk: {fileID: 7400000, guid: b4bd5922d7ace3c4f88f8c371c709c2a, type: 2}
+    run: {fileID: 7400000, guid: b4bd5922d7ace3c4f88f8c371c709c2a, type: 2}
+    height: 0.58
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 61c15683d946a0849a9f432103f85ce0, type: 3}
+  - species: 2
+    appearance: 1
+    resourcePath: Characters/Pets/Rabbit_Brown/Rabbit_Brown
+    displayName: "\uD1A0\uB07C \uBE0C\uB77C\uC6B4"
+    prefab: {fileID: 8320253064457084691, guid: 60f0c3cd8df49314685a6562483494c2, type: 3}
+    idle: {fileID: 7400000, guid: 7b3adaf2d8fba9445b6f145934b0ae8b, type: 2}
+    walk: {fileID: 7400000, guid: 7b3adaf2d8fba9445b6f145934b0ae8b, type: 2}
+    run: {fileID: 7400000, guid: 7b3adaf2d8fba9445b6f145934b0ae8b, type: 2}
+    height: 0.46
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 16ff74e6736cbfb4689cff7a9a69d453, type: 3}
+  - species: 2
+    appearance: 2
+    resourcePath: Characters/Pets/Rabbit_White/Rabbit_White
+    displayName: "\uD1A0\uB07C \uD654\uC774\uD2B8"
+    prefab: {fileID: 2875764722079888100, guid: a4c7bfa7fd7591e4e88596cdd56b7225, type: 3}
+    idle: {fileID: 7400000, guid: 1990a7a9a066f694aa4089353a5839b7, type: 2}
+    walk: {fileID: 7400000, guid: 1990a7a9a066f694aa4089353a5839b7, type: 2}
+    run: {fileID: 7400000, guid: 1990a7a9a066f694aa4089353a5839b7, type: 2}
+    height: 0.46
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 8c77a442f74433e45b6e4a82caaa9930, type: 3}
+  - species: 8
+    appearance: 0
+    resourcePath: Characters/Pets/Fish_A/Fish_A
+    displayName: "\uBB3C\uACE0\uAE30 \uBD84\uD64D"
+    prefab: {fileID: 6440145872749474093, guid: 84e50386e92dd5d4aa2c6dcfdcbd699c, type: 3}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    run: {fileID: 0}
+    height: 0.26
+    yaw: 0
+    portrait: {fileID: 2800000, guid: d4508be440ba02e45bdce8d5743e7fde, type: 3}
+  - species: 8
+    appearance: 1
+    resourcePath: Characters/Pets/Fish_B/Fish_B
+    displayName: "\uBB3C\uACE0\uAE30 \uB178\uB791\xB7\uBE68\uAC15"
+    prefab: {fileID: 7242892648830063406, guid: 975f3e118c0664f4089c57a10740f662, type: 3}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    run: {fileID: 0}
+    height: 0.26
+    yaw: 0
+    portrait: {fileID: 2800000, guid: d502a7d5b65d6e74da7af1036473e707, type: 3}
+  - species: 8
+    appearance: 2
+    resourcePath: Characters/Pets/Fish_C/Fish_C
+    displayName: "\uBB3C\uACE0\uAE30 \uBCF4\uB77C"
+    prefab: {fileID: 1954241617530780060, guid: 9d87a44ec494a0a46bd43268acf87e17, type: 3}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    run: {fileID: 0}
+    height: 0.26
+    yaw: 0
+    portrait: {fileID: 2800000, guid: 7039bb791065ff54eac4a725aba70c98, type: 3}
+  - species: 8
+    appearance: 3
+    resourcePath: Characters/Pets/Fish_D/Fish_D
+    displayName: "\uBB3C\uACE0\uAE30 \uCD08\uB85D"
+    prefab: {fileID: 4427434283955014361, guid: 8b18b08f25b9cfe49826c827bd9006a4, type: 3}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    run: {fileID: 0}
+    height: 0.26
+    yaw: 0
+    portrait: {fileID: 2800000, guid: b7f4a8acd06879948a0440a1854fdb45, type: 3}
+  - species: 8
+    appearance: 4
+    resourcePath: Characters/Pets/Fish_E/Fish_E
+    displayName: "\uBB3C\uACE0\uAE30 \uBE68\uAC15\xB7\uD30C\uB791"
+    prefab: {fileID: 6249106284157912665, guid: 10a21c8e6ecccbf4aaff03fd4300f33d, type: 3}
+    idle: {fileID: 0}
+    walk: {fileID: 0}
+    run: {fileID: 0}
+    height: 0.26
+    yaw: 0
+    portrait: {fileID: 2800000, guid: e556de48850426745b728a5944896762, type: 3}

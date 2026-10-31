@@ -1,0 +1,471 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59999564c935e3e448d1373c9400b590, type: 3}
+  m_Name: Library
+  m_EditorClassIdentifier: Assembly-CSharp::PetTownCozyLibrary
+  style: {fileID: 11400000, guid: 5bf00c820efe96249bda6e2bb739d1b5, type: 2}
+  furniture:
+  - kind: 0
+    detail: 0
+    onSurface: 0
+    title: "\uACC4\uC0B0\uB300"
+    category: "\uC5C5\uBB34"
+    height: 1.05
+    footprint: {x: 2.7299998, y: 1.0625999}
+    prefab: {fileID: 5339610502896316211, guid: a55cf9ec1b932454793e1b582986e257, type: 3}
+    thumbnail: {fileID: 2800000, guid: 421384d05f56aa74e8393df2a8ee5e67, type: 3}
+  - kind: 1
+    detail: 0
+    onSurface: 0
+    title: "\uD3AB \uCFE0\uC158"
+    category: "\uD734\uC2DD"
+    height: 0.22
+    footprint: {x: 0.9219048, y: 0.9219048}
+    prefab: {fileID: 7372690506262952875, guid: 224f3828688bf024d94ef9945607e5b9, type: 3}
+    thumbnail: {fileID: 2800000, guid: 287776ec123eb4340919e9fbb1fa9b8c, type: 3}
+  - kind: 2
+    detail: 0
+    onSurface: 0
+    title: "\uBAA9\uC7AC \uC9C4\uC5F4\uB300"
+    category: "\uC9C4\uC5F4"
+    height: 1.1
+    footprint: {x: 1.2292036, y: 0.60300744}
+    prefab: {fileID: 9070145198280940955, guid: c00deea8d3c48d1448a93d053a2cac71, type: 3}
+    thumbnail: {fileID: 2800000, guid: 9fdce3b601ebce042a1d13016dd412f0, type: 3}
+  - kind: 3
+    detail: 0
+    onSurface: 0
+    title: "\uCFE0\uC158 \uC758\uC790"
+    category: "\uC88C\uC11D"
+    height: 0.9
+    footprint: {x: 0.53642696, y: 0.6044663}
+    prefab: {fileID: 2275073233702566550, guid: 7c1d087b313383042aa94cea108a174d, type: 3}
+    thumbnail: {fileID: 2800000, guid: 9cc92fca4a502674391c4c282f974282, type: 3}
+  - kind: 4
+    detail: 0
+    onSurface: 0
+    title: "\uC6D0\uBAA9 \uD14C\uC774\uBE14"
+    category: "\uC88C\uC11D"
+    height: 0.95
+    footprint: {x: 1.9, y: 1.9000001}
+    prefab: {fileID: 3483689282859330977, guid: 7fb70297e4273714fbd9279d60137030, type: 3}
+    thumbnail: {fileID: 2800000, guid: 0dde4a00411e5744b87523c1b21f8929, type: 3}
+  - kind: 5
+    detail: 0
+    onSurface: 0
+    title: "\uCD08\uB85D \uD654\uBD84"
+    category: "\uC7A5\uC2DD"
+    height: 1.1
+    footprint: {x: 1.7095551, y: 1.3350449}
+    prefab: {fileID: 2777303602041312271, guid: 231290a17213ad64bb1adacaad71593f, type: 3}
+    thumbnail: {fileID: 2800000, guid: f16506fe8679bf04398104c329c54cb4, type: 3}
+  - kind: 0
+    detail: 1
+    onSurface: 0
+    title: "\uC0AC\uB8CC \uC120\uBC18"
+    category: "\uC9C4\uC5F4"
+    height: 1.9
+    footprint: {x: 1.4901961, y: 0.577451}
+    prefab: {fileID: 4778575549992854599, guid: c751f05f7725d0f45943bad4d7096bb7, type: 3}
+    thumbnail: {fileID: 2800000, guid: e6d9d977a234d3940a26346aab6257e2, type: 3}
+  - kind: 1
+    detail: 1
+    onSurface: 0
+    title: "\uC7A5\uB09C\uAC10 \uC9C4\uC5F4\uB300"
+    category: "\uC9C4\uC5F4"
+    height: 2.05
+    footprint: {x: 1.6078433, y: 0.62303925}
+    prefab: {fileID: 4349661478587177155, guid: 37e71aa77ec870449b20050ed7426a77, type: 3}
+    thumbnail: {fileID: 2800000, guid: 6a8db0e7c29103140a7cf7fc142558ec, type: 3}
+  - kind: 2
+    detail: 1
+    onSurface: 0
+    title: "RAT \uCF00\uC774\uC9C0"
+    category: "\uD3AB \uC2DC\uC124"
+    height: 1.58
+    footprint: {x: 0.97477984, y: 0.7605425}
+    prefab: {fileID: 6761522195847845536, guid: 2828f96cf589d3e43a0232da7205254a, type: 3}
+    thumbnail: {fileID: 2800000, guid: 8f2fa630b007e9545b60983e94add15f, type: 3}
+  - kind: 3
+    detail: 1
+    onSurface: 0
+    title: "\uC218\uC871\uAD00"
+    category: "\uD3AB \uC2DC\uC124"
+    height: 1.6
+    footprint: {x: 1.7584664, y: 0.84856224}
+    prefab: {fileID: 3407347010935601454, guid: 5fa8671266a4b8745930a0dbfeff4de6, type: 3}
+    thumbnail: {fileID: 2800000, guid: ad2eae3fa5a30f440b19f7e8c3536cda, type: 3}
+  - kind: 4
+    detail: 1
+    onSurface: 0
+    title: "\uAC15\uC544\uC9C0 \uCFE0\uC158"
+    category: "\uD734\uC2DD"
+    height: 0.36
+    footprint: {x: 1.5085715, y: 1.5085715}
+    prefab: {fileID: 8830291784366636763, guid: 03d47f0664fa2d14a95641571969d38e, type: 3}
+    thumbnail: {fileID: 2800000, guid: 17cf349765b67ca49a0fae00a0d51f0c, type: 3}
+  - kind: 5
+    detail: 1
+    onSurface: 0
+    title: "\uACE0\uC591\uC774 \uCFE0\uC158"
+    category: "\uD734\uC2DD"
+    height: 0.3
+    footprint: {x: 1.257143, y: 1.257143}
+    prefab: {fileID: 6575015645087376588, guid: 56517da9a46065d40ac8a7c22f46527c, type: 3}
+    thumbnail: {fileID: 2800000, guid: 8ecae8058e9ee124eb2ca0bb7752de55, type: 3}
+  - kind: 6
+    detail: 1
+    onSurface: 0
+    title: "\uC0C8\uC7A5"
+    category: "\uD3AB \uC2DC\uC124"
+    height: 2.2
+    footprint: {x: 0.69411767, y: 0.6941748}
+    prefab: {fileID: 5355366027991052231, guid: 74f426e3c251f0c4e8d99f7276ec580b, type: 3}
+    thumbnail: {fileID: 2800000, guid: 439d0be658f498e4f964506a2ccb0d73, type: 3}
+  - kind: 7
+    detail: 1
+    onSurface: 0
+    title: "\uACE0\uC591\uC774 \uD3AB\uD0C0\uC6CC"
+    category: "\uD3AB \uC2DC\uC124"
+    height: 1.61
+    footprint: {x: 1.1723827, y: 1.0265101}
+    prefab: {fileID: 1042130537616058975, guid: 4697e2723bb607c4db65ef5e4ed75680, type: 3}
+    thumbnail: {fileID: 2800000, guid: 6f266b1ffb6e3e74d97514eb6705d6ad, type: 3}
+  - kind: 8
+    detail: 1
+    onSurface: 1
+    title: "\uCEF4\uD4E8\uD130"
+    category: "\uC5C5\uBB34"
+    height: 0.48
+    footprint: {x: 0.70769066, y: 0.4860524}
+    prefab: {fileID: 5453635894667499235, guid: 5233642e15f3cc24fa6071b0c4f791f4, type: 3}
+    thumbnail: {fileID: 2800000, guid: 65ca0ac5348f9f84594d6e0efe00d07f, type: 3}
+  - kind: 9
+    detail: 1
+    onSurface: 0
+    title: "\uC0AC\uB8CC \uC9C4\uC5F4\uB300"
+    category: "\uC9C4\uC5F4"
+    height: 1.6
+    footprint: {x: 1.254902, y: 0.4862745}
+    prefab: {fileID: 3047095523601281382, guid: b1a135050e6914f4cb91fc92c2c7528b, type: 3}
+    thumbnail: {fileID: 2800000, guid: a01ae19a047e8ef4aa0603bb8eaba52a, type: 3}
+  - kind: 10
+    detail: 1
+    onSurface: 0
+    title: "\uD479\uC2E0\uD55C \uC548\uB77D\uC758\uC790"
+    category: "\uC88C\uC11D"
+    height: 1.05
+    footprint: {x: 1.5440423, y: 1.3724821}
+    prefab: {fileID: 3829275921001715022, guid: 92513226cd8e144419c06d8736843c02, type: 3}
+    thumbnail: {fileID: 2800000, guid: b7020eada7ac0024ca1b01abd8b66209, type: 3}
+  - kind: 11
+    detail: 1
+    onSurface: 0
+    title: "\uCFE0\uC158 \uC18C\uD30C"
+    category: "\uC88C\uC11D"
+    height: 1.05
+    footprint: {x: 2.5734038, y: 1.3724821}
+    prefab: {fileID: 5398722185003039068, guid: 71584fd6a5cb3e74e98fe2118d5a8a34, type: 3}
+    thumbnail: {fileID: 2800000, guid: a11d7270cdba43542a53543273f568d7, type: 3}
+  - kind: 12
+    detail: 1
+    onSurface: 0
+    title: "\uC791\uC740 \uD14C\uC774\uBE14"
+    category: "\uC88C\uC11D"
+    height: 0.7
+    footprint: {x: 0.7, y: 0.70000005}
+    prefab: {fileID: 428908271846236685, guid: 4b76c2fd208b5f945b377612772b6cde, type: 3}
+    thumbnail: {fileID: 2800000, guid: a058eb250f9c90449a0f45305adb6611, type: 3}
+  - kind: 13
+    detail: 1
+    onSurface: 0
+    title: "\uB0AE\uC740 \uD14C\uC774\uBE14"
+    category: "\uC88C\uC11D"
+    height: 0.5
+    footprint: {x: 2.3999996, y: 1.4999996}
+    prefab: {fileID: 3260185349981179982, guid: af7353c0a71814e4f86741c6c3d89e4d, type: 3}
+    thumbnail: {fileID: 2800000, guid: 48897b17194686e4ba0d6552d8940b89, type: 3}
+  - kind: 14
+    detail: 1
+    onSurface: 0
+    title: "\uC218\uB0A9\uC7A5"
+    category: "\uC9C4\uC5F4"
+    height: 1.2
+    footprint: {x: 0.7772447, y: 0.8189472}
+    prefab: {fileID: 4868299599682013852, guid: c9f37f0a5d68e934a9a89de4b89385f7, type: 3}
+    thumbnail: {fileID: 2800000, guid: 29d2db96645b3694bad0974b1b7a3fcc, type: 3}
+  - kind: 15
+    detail: 1
+    onSurface: 0
+    title: "\uC7A5\uC2DD \uC11C\uB78D\uC7A5"
+    category: "\uC9C4\uC5F4"
+    height: 1.3
+    footprint: {x: 1.4526951, y: 0.71264505}
+    prefab: {fileID: 3188205271292485382, guid: 2463aedd6fd225342963beb62b20df5a, type: 3}
+    thumbnail: {fileID: 2800000, guid: fc0acc3c43d43d5499a87aaf2c0beadb, type: 3}
+  - kind: 16
+    detail: 1
+    onSurface: 0
+    title: "\uB192\uC740 \uC6D0\uBAA9 \uC120\uBC18"
+    category: "\uC9C4\uC5F4"
+    height: 2
+    footprint: {x: 1.5686275, y: 0.60784316}
+    prefab: {fileID: 1894746131351503300, guid: 2bccd249dfdca3f41bb8af398bb99200, type: 3}
+    thumbnail: {fileID: 2800000, guid: 7637807d13695504a9f6c6ce4ea5e9c8, type: 3}
+  - kind: 17
+    detail: 1
+    onSurface: 0
+    title: "\uC0C1\uD488 \uC7A5\uC2DD \uC120\uBC18"
+    category: "\uC9C4\uC5F4"
+    height: 2
+    footprint: {x: 1.5686275, y: 0.60784316}
+    prefab: {fileID: 4282548602331014613, guid: 2ab1d2693eb95084f91876ca6bbe4fef, type: 3}
+    thumbnail: {fileID: 2800000, guid: 3c803e0cab029cd4992d7e5535afcac9, type: 3}
+  - kind: 18
+    detail: 1
+    onSurface: 0
+    title: "\uC2A4\uD0E0\uB4DC \uC870\uBA85"
+    category: "\uC870\uBA85"
+    height: 1.9
+    footprint: {x: 0.7539682, y: 0.75396824}
+    prefab: {fileID: 5399645708064224520, guid: 63f1ff328453bbc4b9c3da568e48fe58, type: 3}
+    thumbnail: {fileID: 2800000, guid: 0bd6ae6f0178e2c498293cfdd0201312, type: 3}
+  - kind: 19
+    detail: 1
+    onSurface: 1
+    title: "\uD14C\uC774\uBE14 \uC870\uBA85"
+    category: "\uC870\uBA85"
+    height: 0.65
+    footprint: {x: 0.6362162, y: 0.6362163}
+    prefab: {fileID: 2935765478158867833, guid: bbaf5f1b2090b7f4dae3516fbdc0c35d, type: 3}
+    thumbnail: {fileID: 2800000, guid: a2b23f5ca4b9f9c47b7452b1eece0b1b, type: 3}
+  - kind: 20
+    detail: 1
+    onSurface: 0
+    title: "\uB465\uADFC \uC120\uC778\uC7A5"
+    category: "\uC7A5\uC2DD"
+    height: 0.8
+    footprint: {x: 0.85092884, y: 0.8092816}
+    prefab: {fileID: 8183115569652179256, guid: 0f9b70eb284c0144ebf4908fa0264b06, type: 3}
+    thumbnail: {fileID: 2800000, guid: 3e56f0d3131cb614cb2245ee5f813885, type: 3}
+  - kind: 21
+    detail: 1
+    onSurface: 0
+    title: "\uAE34 \uC120\uC778\uC7A5"
+    category: "\uC7A5\uC2DD"
+    height: 0.9
+    footprint: {x: 0.95729494, y: 0.91044176}
+    prefab: {fileID: 7455007767342980086, guid: 5e2a05aac67af8648bc1865f5b2f9c04, type: 3}
+    thumbnail: {fileID: 2800000, guid: 21a608b3ed587c641b1f9cd5299541ef, type: 3}
+  - kind: 22
+    detail: 1
+    onSurface: 0
+    title: "\uD0C0\uC6D0 \uB7EC\uADF8"
+    category: "\uC7A5\uC2DD"
+    height: 0.025
+    footprint: {x: 0.7499989, y: 0.49999928}
+    prefab: {fileID: 3761003788052687572, guid: aeb6f603b8a83d24ca78c8369a668ee0, type: 3}
+    thumbnail: {fileID: 2800000, guid: 0e81032e39b06dc41bf565a2a254cc79, type: 3}
+  - kind: 23
+    detail: 1
+    onSurface: 0
+    title: "\uC904\uBB34\uB2AC \uB7EC\uADF8"
+    category: "\uC7A5\uC2DD"
+    height: 0.025
+    footprint: {x: 0.7499989, y: 0.49999928}
+    prefab: {fileID: 3890567109952525156, guid: cb37af4d85225cd449c5657df55741cb, type: 3}
+    thumbnail: {fileID: 2800000, guid: 1d4484c43f7c89948b7b353c4decbe70, type: 3}
+  - kind: 24
+    detail: 1
+    onSurface: 1
+    title: "\uD0C1\uC0C1 \uC561\uC790"
+    category: "\uC7A5\uC2DD"
+    height: 0.45
+    footprint: {x: 0.36376053, y: 0.27607232}
+    prefab: {fileID: 4923434439016916006, guid: c2f6f557e5368d849a309174f8a77cf3, type: 3}
+    thumbnail: {fileID: 2800000, guid: 714707a37358d174782091a642271ef4, type: 3}
+  - kind: 25
+    detail: 1
+    onSurface: 0
+    title: "\uBAA8\uB358 \uC758\uC790"
+    category: "\uC88C\uC11D"
+    height: 0.95
+    footprint: {x: 0.5662285, y: 0.6380478}
+    prefab: {fileID: 6379343852280667760, guid: 101966448a53f9e438127aa944b48e7c, type: 3}
+    thumbnail: {fileID: 2800000, guid: 4faea955d52bd7942b573760c2de8e90, type: 3}
+  - kind: 26
+    detail: 1
+    onSurface: 0
+    title: "\uB77C\uC6B4\uC9C0 \uC758\uC790"
+    category: "\uC88C\uC11D"
+    height: 0.95
+    footprint: {x: 0.59229755, y: 0.7388884}
+    prefab: {fileID: 7632986604531101322, guid: 73b2d3fc4410fb94daa81b3348b7f1c9, type: 3}
+    thumbnail: {fileID: 2800000, guid: 4b4403f5ebe7f484186ac1a3b0b620a1, type: 3}
+  - kind: 27
+    detail: 1
+    onSurface: 0
+    title: "\uC2A4\uD234"
+    category: "\uC88C\uC11D"
+    height: 0.55
+    footprint: {x: 0.82500005, y: 0.82500005}
+    prefab: {fileID: 3790771135614777904, guid: 19b5592824117ab49bf94603c007d6ca, type: 3}
+    thumbnail: {fileID: 2800000, guid: 9dd6c5d184dcb1e46ad963bd96165f43, type: 3}
+  - kind: 28
+    detail: 1
+    onSurface: 1
+    title: "\uCC45 \uBB36\uC74C"
+    category: "\uC7A5\uC2DD"
+    height: 0.35
+    footprint: {x: 0.546, y: 0.25550002}
+    prefab: {fileID: 6594516790190000181, guid: 5cd66fb45d64e0243a12b12523f5da22, type: 3}
+    thumbnail: {fileID: 2800000, guid: 66e86a2376cabee489830aaa6637219d, type: 3}
+  - kind: 29
+    detail: 1
+    onSurface: 0
+    title: "\uC791\uC740 \uCFE0\uC158"
+    category: "\uD734\uC2DD"
+    height: 0.18
+    footprint: {x: 0.5849999, y: 0.45000002}
+    prefab: {fileID: 973920934002852616, guid: 2ec143d8b7eda1348826b60c123ea910, type: 3}
+    thumbnail: {fileID: 2800000, guid: e4b538db4c278dd4aa7672572292ac10, type: 3}
+  - kind: 30
+    detail: 1
+    onSurface: 0
+    title: "\uCE68\uB300"
+    category: "\uC9D1\xB7\uCE68\uC2E4"
+    height: 0.91347665
+    footprint: {x: 1.9385126, y: 2.5719576}
+    prefab: {fileID: 7220310530575114529, guid: db8cb6517ba68914cbf2ca5a171f7a0b, type: 3}
+    thumbnail: {fileID: 2800000, guid: 926b4ec26d7224640911ef279bed80e2, type: 3}
+  - kind: 31
+    detail: 1
+    onSurface: 0
+    title: "\uD611\uD0C1"
+    category: "\uC9D1\xB7\uCE68\uC2E4"
+    height: 0.50201654
+    footprint: {x: 0.7316328, y: 0.6510856}
+    prefab: {fileID: 529912038483916588, guid: 1f17a4deb7c3e9f439f66038ceb7cc2b, type: 3}
+    thumbnail: {fileID: 2800000, guid: ab326a037d709de46a3c2af45f0d7961, type: 3}
+  - kind: 32
+    detail: 1
+    onSurface: 0
+    title: "\uC637\uC7A5"
+    category: "\uC9D1\xB7\uCE68\uC2E4"
+    height: 2.1
+    footprint: {x: 1.4399999, y: 0.72972286}
+    prefab: {fileID: 7753924162705105713, guid: 1a2e45b42811b0b409d974ff89120029, type: 3}
+    thumbnail: {fileID: 2800000, guid: 0720bb1e2db7f534f8cfd8cf3f1cdc16, type: 3}
+  - kind: 33
+    detail: 1
+    onSurface: 0
+    title: "\uC11C\uB78D\uC7A5"
+    category: "\uC9D1\xB7\uCE68\uC2E4"
+    height: 1.2592936
+    footprint: {x: 0.8297143, y: 1.9627693}
+    prefab: {fileID: 3578615739787519488, guid: ef56c31f9ccabcb4c9161417bc537af7, type: 3}
+    thumbnail: {fileID: 2800000, guid: a18bc6544f7f3254fad84043172885c1, type: 3}
+  - kind: 34
+    detail: 1
+    onSurface: 0
+    title: "\uD070 \uC18C\uD30C"
+    category: "\uC9D1\xB7\uAC70\uC2E4"
+    height: 0.93466395
+    footprint: {x: 2.675, y: 0.85698426}
+    prefab: {fileID: 6566963047283468661, guid: c158fcabe7691704ba9943df773b4dca, type: 3}
+    thumbnail: {fileID: 2800000, guid: 75ebf6af661bf484bb1ea4625c0d89f6, type: 3}
+  - kind: 35
+    detail: 1
+    onSurface: 0
+    title: "\uC791\uC740 \uC18C\uD30C"
+    category: "\uC9D1\xB7\uAC70\uC2E4"
+    height: 0.93466395
+    footprint: {x: 1.9282739, y: 0.85698426}
+    prefab: {fileID: 2922442491905193731, guid: dd1f33b4d264fc640a18339527b042f2, type: 3}
+    thumbnail: {fileID: 2800000, guid: 2fa1291ecddbcf745b61de9cf4342cd7, type: 3}
+  - kind: 36
+    detail: 1
+    onSurface: 0
+    title: "\uCEE4\uD53C \uD14C\uC774\uBE14"
+    category: "\uC9D1\xB7\uAC70\uC2E4"
+    height: 0.4713562
+    footprint: {x: 0.880527, y: 0.49902698}
+    prefab: {fileID: 6339441325186045645, guid: ed82021562fcbc849a49029cfcbbdb02, type: 3}
+    thumbnail: {fileID: 2800000, guid: df6ddba888b9f434cb4796062dbcd527, type: 3}
+  - kind: 37
+    detail: 1
+    onSurface: 0
+    title: "TV \uC7A5"
+    category: "\uC9D1\xB7\uAC70\uC2E4"
+    height: 0.58516467
+    footprint: {x: 1.8, y: 0.45410955}
+    prefab: {fileID: 8106584274649532831, guid: b71a8f32d511057419c8ca4ca16d503b, type: 3}
+    thumbnail: {fileID: 2800000, guid: 710ead95c1b4d71479b9ba29e1cb68bb, type: 3}
+  - kind: 42
+    detail: 1
+    onSurface: 0
+    title: "\uB0C9\uC7A5\uACE0"
+    category: "\uC9D1\xB7\uC8FC\uBC29"
+    height: 1.9355822
+    footprint: {x: 0.82076246, y: 0.95192593}
+    prefab: {fileID: 7395360421041092406, guid: 535583f2d75c6644b92aeda08ab581c7, type: 3}
+    thumbnail: {fileID: 2800000, guid: 9840c9454b94b054296c1e04f1f01b3e, type: 3}
+  - kind: 43
+    detail: 1
+    onSurface: 0
+    title: "\uAC00\uC2A4\uB808\uC778\uC9C0"
+    category: "\uC9D1\xB7\uC8FC\uBC29"
+    height: 1.0875087
+    footprint: {x: 0.92335784, y: 0.94926876}
+    prefab: {fileID: 7330107179954107195, guid: b598b4792c3dcb74db4c8a732b9c1997, type: 3}
+    thumbnail: {fileID: 2800000, guid: e197fa752c27b534e8f7110a4dec2356, type: 3}
+  - kind: 44
+    detail: 1
+    onSurface: 0
+    title: "\uC2DD\uD0C1"
+    category: "\uC9D1\xB7\uC8FC\uBC29"
+    height: 0.82778174
+    footprint: {x: 2.2553995, y: 1.1250794}
+    prefab: {fileID: 9105331056918016156, guid: d1cb9841b0707674480892b8c859c19e, type: 3}
+    thumbnail: {fileID: 2800000, guid: 1572c445f1930e5428295f36b4ce669a, type: 3}
+  - kind: 45
+    detail: 1
+    onSurface: 0
+    title: "\uC2DD\uD0C1 \uC758\uC790"
+    category: "\uC9D1\xB7\uC8FC\uBC29"
+    height: 1.2209088
+    footprint: {x: 0.47506815, y: 0.5609795}
+    prefab: {fileID: 2193083634726461848, guid: 9c8a139552e72124aae969c436e94b02, type: 3}
+    thumbnail: {fileID: 2800000, guid: b69029884b9b00c4a918c65439585040, type: 3}
+  - kind: 48
+    detail: 1
+    onSurface: 0
+    title: "\uD070 \uB7EC\uADF8"
+    category: "\uC9D1\xB7\uAC70\uC2E4"
+    height: 0.02
+    footprint: {x: 2.5049245, y: 1.5031412}
+    prefab: {fileID: 2291396488652203484, guid: 83bc8e9a0fbac2847b1c064c99997844, type: 3}
+    thumbnail: {fileID: 2800000, guid: 31016edd4a5a75740a77b758f2f1da2d, type: 3}
+  - kind: 49
+    detail: 1
+    onSurface: 0
+    title: "\uC791\uC740 \uB7A8\uD504"
+    category: "\uC9D1\xB7\uAC70\uC2E4"
+    height: 0.33732688
+    footprint: {x: 0.31574237, y: 0.20322172}
+    prefab: {fileID: 2759447858209869741, guid: 112a09ee5118f514e8656481299dab00, type: 3}
+    thumbnail: {fileID: 2800000, guid: af0b420517dbce943bee49522a5f4fe6, type: 3}
+  woodFloor: {fileID: 2100000, guid: 00eae997c83bc2444b5ebe8665cff312, type: 2}
+  plaster: {fileID: 2100000, guid: 98d29643428f9f345a1df69a0aa4b543, type: 2}
+  timber: {fileID: 2100000, guid: 4c4bf3d145a6f574e93c330daa744848, type: 2}
+  glass: {fileID: 2100000, guid: 3e79c8100e64e9c47826ea28d33ef1c0, type: 2}
+  careIcons: {fileID: 2800000, guid: 57c762dfaedd1d740ae8a5e0c5cf4163, type: 3}

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e0dda2547f4c6c48b8e517af9d953b4, type: 3}
+  m_Name: Library
+  m_EditorClassIdentifier: Assembly-CSharp::PetTownPoultryLibrary
+  house: {fileID: 919132149155446097, guid: 752de746f698a8e49a34b64ef2ea4a0d, type: 3}
+  chicken: {fileID: 8073443194988779917, guid: 6b0b0b098177a3b439c80991ec9deacc, type: 3}
+  hay: {fileID: 2109502455271231869, guid: cf4369beeec7d414a9780ddfc48c6c80, type: 3}
+  bucket: {fileID: 8216137669613549620, guid: dc7ffad958d315f4f9aed4a5aeba34ce, type: 3}
+  egg: {fileID: 286882382517897707, guid: 1c917c1cb8490e54ba89bdc1b6ae8161, type: 3}
+  sack: {fileID: 919132149155446097, guid: febbf55858f998a4f9d8246fc881a1f9, type: 3}
+  gate: {fileID: 919132149155446097, guid: 61eee2d3efd83e446b258a6ed551a966, type: 3}
+  idle: {fileID: -4410364115441826551, guid: 605d0caffe3b2fe489bc37e772cb7496, type: 3}
+  walk: {fileID: 3158070147111159031, guid: 605d0caffe3b2fe489bc37e772cb7496, type: 3}
+  thumbnail: {fileID: 2800000, guid: 238191ff2a229504fa0032b2187694de, type: 3}
+  birdIcon: {fileID: 2800000, guid: a5c4faf5e7add594f8596931b6dbe2ee, type: 3}
+  feedIcon: {fileID: 2800000, guid: 4b2b2e29bf3d7164bab0218ec767ea00, type: 3}
+  waterIcon: {fileID: 2800000, guid: b0f502f6c793a6747ac2d4a1e12c9163, type: 3}
+  eggIcon: {fileID: 2800000, guid: 3fa59daf1b25ce6439b6e5586a61badf, type: 3}
+  cleanIcon: {fileID: 2800000, guid: 17534b2ad05b7664d80249913f29b074, type: 3}

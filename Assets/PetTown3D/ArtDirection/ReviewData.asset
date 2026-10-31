@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d4c80447d7bfd04b93ac4325ac5d9ee, type: 3}
+  m_Name: ReviewData
+  m_EditorClassIdentifier: Assembly-CSharp::PetTownArtPreviewData
+  gold: 99993048
+  day: 166
+  residents: 18
+  reputation: 0
+  level: 1
+  pets: 0
+  portrait: {fileID: 0}
+  iconAtlas: {fileID: 2800000, guid: 2bfb1896a8f121244b43022cb5e8f990, type: 3}
+  font: {fileID: 11400000, guid: 03b34515574ce9244b91ae7f3386cde6, type: 2}
+  paper: {fileID: 6775941700451233582, guid: 1ef1b766d269df744bb4094311137a4c, type: 3}
+  header: {fileID: 4632868156732074959, guid: dd1451f49b397bb42a3248ab93a389b7, type: 3}
+  card: {fileID: -8074914727802298349, guid: 8c2980352237a024f916e7b5812a0f92, type: 3}
+  selectedCard: {fileID: 3953773118566761036, guid: 68d4c74059b3f2948bd07158274e16a5, type: 3}
+  greenButton: {fileID: -626086795439725482, guid: 3077b72e7923ec54d97f975f32a92b33, type: 3}
+  lightButton: {fileID: 4110013076273160049, guid: e059bb07cabf57240852d78674a1033e, type: 3}
+  coralButton: {fileID: 7228427573584015795, guid: f5e750817da85094ba9d7fe5482b5758, type: 3}
+  shadow: {fileID: 21300000, guid: 68913836b6a187c4f9a4a14120079b60, type: 3}
+  circle: {fileID: 21300000, guid: dc1ad47cc7e4c3e4abfc468f14c9edd5, type: 3}
+  barTrack: {fileID: -5825907744044726544, guid: f8f098445e33e4d4fbfbe411bd9a5edf, type: 3}
+  barFill: {fileID: 6364541390996672813, guid: a270f4b006bd50740b6b76bc2e076c78, type: 3}
+  hudCircle: {fileID: 6048381132412617353, guid: d64db7690e5e3cb47aafa1ee3dfda248, type: 3}
+  hudChip: {fileID: 1790771809652766754, guid: fae1ea72ba20eeb45b5054fa3ef82cd4, type: 3}
+  hudMessage: {fileID: -1216065503446059275, guid: d103b9b38f09fb6449e063c1ee5ac29e, type: 3}
+  buildings:
+  - key: 1
+    price: 600
+    title: "\uC9D1"
+    category: "\uC8FC\uAC70"
+    description: "\uB098\uB9CC\uC758 \uAC00\uAD6C\uB85C \uB530\uB73B\uD558\uAC8C\n\uAFB8\uBC00 \uC218 \uC788\uB294 \uC9D1\uC785\uB2C8\uB2E4."
+    size: "11\xD710m"
+    model: {fileID: 3711808853983395338, guid: 23b631660de39054f98c6ca407670c59, type: 3}
+    thumbnail: {fileID: 2800000, guid: 53d15d1d1f5235846a57e2626d301ee7, type: 3}
+  - key: 2
+    price: 250
+    title: "\uC8FC\uBBFC \uC8FC\uD0DD"
+    category: "\uC8FC\uAC70"
+    description: "\uC0C8\uB85C\uC6B4 \uC8FC\uBBFC\uC774 \uBA38\uBB34\uB294\n\uC544\uB291\uD55C \uC8FC\uD0DD\uC785\uB2C8\uB2E4."
+    size: "7\xD77m"
+    model: {fileID: 5702565433863758129, guid: 30b309f902d654f42b63e616787ebff0, type: 3}
+    thumbnail: {fileID: 2800000, guid: b0bd2f84c63f547499a636fb0acf0ae4, type: 3}
+  - key: 3
+    price: 1500
+    title: "\uD3AB \uCE74\uD398"
+    category: "\uC0DD\uD65C"
+    description: "\uBC18\uB824\uB3D9\uBB3C\uACFC \uD568\uAED8 \uC26C\uC5B4 \uAC00\uB294\n\uB9C8\uC744\uC758 \uCE74\uD398\uC785\uB2C8\uB2E4."
+    size: "11\xD710m"
+    model: {fileID: 4606566026726503919, guid: fe07b7285f6f3e547ba68a99dfd931c2, type: 3}
+    thumbnail: {fileID: 2800000, guid: e51e67f97626550429c72daa423d6e88, type: 3}
+  - key: 4
+    price: 1800
+    title: "\uD3AB \uBCD1\uC6D0"
+    category: "\uC0DD\uD65C"
+    description: "\uB9C8\uC744\uC758 \uBC18\uB824\uB3D9\uBB3C\uC744 \uB3CC\uBCF4\uB294\n\uD3AB \uBCD1\uC6D0\uC785\uB2C8\uB2E4."
+    size: "11\xD710m"
+    model: {fileID: 8703683426834760231, guid: aa839e23354edce499ac4b98c7286a0b, type: 3}
+    thumbnail: {fileID: 2800000, guid: f1c4c926da7fb8949a1fca0aa47ba694, type: 3}
+  - key: 5
+    price: 450
+    title: "\uACF5\uC6D0"
+    category: "\uC57C\uC678"
+    description: "\uAF43\uACFC \uB098\uBB34, \uBD84\uC218\uAC00 \uC5B4\uC6B0\uB7EC\uC9C4\n\uB9C8\uC744\uC758 \uD734\uC2DD \uACF5\uAC04\uC785\uB2C8\uB2E4."
+    size: "15\xD715m"
+    model: {fileID: 7059814524091262032, guid: d79844e9ae045874f983cf130c139570, type: 3}
+    thumbnail: {fileID: 2800000, guid: e32d2913b0bd90940890693e2391b054, type: 3}
+  - key: 6
+    price: 700
+    title: "\uD638\uC218"
+    category: "\uC57C\uC678"
+    description: "\uC0B0\uCC45\uAE38\uC744 \uB530\uB77C \uB9D1\uC740 \uBB3C\uC744\n\uC990\uAE30\uB294 \uC791\uC740 \uD638\uC218\uC785\uB2C8\uB2E4."
+    size: "15\xD715m"
+    model: {fileID: 3315043052653387094, guid: 40a784f4f7bcba84084134e6ad836330, type: 3}
+    thumbnail: {fileID: 2800000, guid: eedd67ff64137454b8721c8623be3e9b, type: 3}
+  - key: 7
+    price: 2400
+    title: "\uB3D9\uBB3C\uC6D0"
+    category: "\uC57C\uC678"
+    description: "\uC6B8\uD0C0\uB9AC\uC640 \uC27C\uD130\uAC00 \uC788\uB294\n\uB3D9\uBB3C\uB4E4\uC758 \uC57C\uC678 \uACF5\uAC04\uC785\uB2C8\uB2E4."
+    size: "22\xD722m"
+    model: {fileID: 6406242829540653248, guid: 9b5febd1b02194d41a2d5e2a11ed656e, type: 3}
+    thumbnail: {fileID: 2800000, guid: ebad54fd48e2edf4a9219597c45b2376, type: 3}
+  - key: 8
+    price: 20
+    title: "\uD759\uAE38"
+    category: "\uB3C4\uB85C"
+    description: "\uC790\uC720 \uACE1\uC120 \uB610\uB294 \uACA9\uC790 \uC9C1\uC120\uC73C\uB85C\n\uC774\uC5B4 \uB9CC\uB4DC\uB294 \uD759\uAE38\uC785\uB2C8\uB2E4."
+    size: "\uB4DC\uB798\uADF8"
+    model: {fileID: 1198022073729233223, guid: 22dd7b321a3221346aefeb37e8da1f75, type: 3}
+    thumbnail: {fileID: 2800000, guid: e0886f31efd67d54ebfb0f424cd6a52a, type: 3}

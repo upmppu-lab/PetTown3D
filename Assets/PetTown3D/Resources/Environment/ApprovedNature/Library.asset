@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f6a233cd6c660a45a3686ccce8a1ce8, type: 3}
+  m_Name: Library
+  m_EditorClassIdentifier: Assembly-CSharp::PetTownForestLibrary
+  trees:
+  - {fileID: 6038214420265373883, guid: 9bd52ab03770a5e45925da210da96cb5, type: 3}
+  - {fileID: 1357979079139912837, guid: 8416a52e432129a48a916b75f73ae585, type: 3}
+  - {fileID: 715955574223555450, guid: c11f2a71383d691498a90fbe30d006a6, type: 3}
+  - {fileID: 5143631554533570656, guid: 28f899445f5cf6745aade6e2f46a2536, type: 3}
+  - {fileID: 6918306013137725819, guid: 328f6681b52c67a4f9990706805da8a7, type: 3}
+  - {fileID: 1351063872512052534, guid: c784a712cb81a584e8eaddcca03d0c36, type: 3}
+  - {fileID: 2632161530720362800, guid: 84c92bf3d6c376f4588186cf11785481, type: 3}
+  - {fileID: 8291510095807175, guid: 18def4980a56abb46bc10abd6978a8b1, type: 3}
+  groundCover:
+  - {fileID: 1601716768017217606, guid: 4f814c0c6a3ac534c8405dc3020e5f3b, type: 3}
+  - {fileID: 7833037756084252548, guid: 7945d1c8fdc4a694296a0fbaf0a1a2ab, type: 3}
+  - {fileID: 6671043772708848929, guid: f9efa1bcc0fbfd84daad3940fe436d4c, type: 3}
+  - {fileID: 8002967831978442638, guid: 7e21e8779f44d1e49bd9659c413a90ee, type: 3}
+  - {fileID: 8468811771115537971, guid: 451b0535ff20ff54ca197ed9281438a8, type: 3}
+  - {fileID: 5058250266189697919, guid: 88290c3293fea3f4c8e64c4f3d4c8247, type: 3}
+  - {fileID: 3653736599998317464, guid: 23b7fd6326da99b498351947267ef4f8, type: 3}
+  - {fileID: 7126517640693128876, guid: b3dc72b7e2cae2b4e8bc4f596f036a59, type: 3}
+  - {fileID: 6448528558158443775, guid: 80ef0e7e48bd2f343a7c61ab978bf48d, type: 3}
+  approvedMeadow: 1
+  groundMaterial: {fileID: 2100000, guid: 066aa82dff9c13d46be52034a22e1174, type: 2}
+  meadowMask: {fileID: 2800000, guid: 6e029b78dd2bf774ca70681d204f364b, type: 3}
+  meadowBounds: {x: -110, y: -110, z: 220, w: 220}
+  grasses:
+  - {fileID: 1601716768017217606, guid: 4f814c0c6a3ac534c8405dc3020e5f3b, type: 3}
+  - {fileID: 7833037756084252548, guid: 7945d1c8fdc4a694296a0fbaf0a1a2ab, type: 3}
+  flowers:
+  - {fileID: 6671043772708848929, guid: f9efa1bcc0fbfd84daad3940fe436d4c, type: 3}
+  - {fileID: 8002967831978442638, guid: 7e21e8779f44d1e49bd9659c413a90ee, type: 3}
+  - {fileID: 8468811771115537971, guid: 451b0535ff20ff54ca197ed9281438a8, type: 3}
+  - {fileID: 5058250266189697919, guid: 88290c3293fea3f4c8e64c4f3d4c8247, type: 3}
+  shrubs:
+  - {fileID: 3653736599998317464, guid: 23b7fd6326da99b498351947267ef4f8, type: 3}
+  - {fileID: 7126517640693128876, guid: b3dc72b7e2cae2b4e8bc4f596f036a59, type: 3}
+  rocks:
+  - {fileID: 6448528558158443775, guid: 80ef0e7e48bd2f343a7c61ab978bf48d, type: 3}
